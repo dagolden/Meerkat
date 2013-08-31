@@ -1,0 +1,32 @@
+# PODNAME: Meerkat::Tutorial
+# ABSTRACT: Getting started with Meerkat
+
+=head1 TUTORIAL
+
+=head2 Prerequisites
+
+If you don't already have MongoDB installed and running, see the
+L<installation guide|http://docs.mongodb.org/manual/installation/>
+
+Test that you can connect to the C<test> database from the C<mongo> shell:
+
+    $ mongo test
+
+=head2 Creating Your Document Model
+
+...
+
+=head2 Creating New Documents
+
+...
+
+=head2 Updating, Synchronizing and Removing Documents
+
+...
+
+=head2 Searching the Database
+
+...
+
+=cut
+

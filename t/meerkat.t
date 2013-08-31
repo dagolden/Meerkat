@@ -1,0 +1,102 @@
+use strict;
+use warnings;
+use Test::Roo;
+use Test::FailWarnings;
+use Test::Fatal;
+use Test::Requires qw/MongoDB::MongoClient/;
+
+my $conn = eval { MongoDB::MongoClient->new; };
+plan skip_all => "No MongoDB on localhost" unless $conn;
+
+use lib 't/lib';
+
+with 'TestFixtures';
+
+test 'collection' => sub {
+    my $self = shift;
+    ok( my $coll1 = $self->meerkat->collection("Person"), "get a collection" );
+    ok( my $coll2 = $self->person, "get another one" );
+    isnt( $coll1, $coll2, "collections are different objects" );
+    is( $coll1->_mongo_collection, $coll2->_mongo_collection,
+        "collections share a mongodb collection object" );
+
+};
+
+test 'create arguments' => sub {
+    my $self = shift;
+    ok( $self->person->create, "empty" );
+    ok( $self->person->create( name => "Joe" ), "list" );
+    ok( $self->person->create( { name => "Joe" } ), "hashref" );
+};
+
+test 'round trip' => sub {
+    my $self = shift;
+
+    ok( my $obj1 = $self->person->create, "created object" );
+    ok( $self->person->create, "created second object" );
+
+    my $obj2 = $self->person->find_id( $obj1->_id );
+    is_deeply( $obj2, $obj1, "retrieve first object from database by OID" );
+
+    my $obj3 = $self->person->find_id( $obj1->_id->value );
+    is_deeply( $obj3, $obj1, "retrieve first object from database by string" );
+
+    ok( my $cursor = $self->person->find( { name => $obj1->name } ), "find query ran" );
+    isa_ok( $cursor, 'Meerkat::Cursor' );
+    my $obj4 = $cursor->next;
+    is_deeply( $obj4, $obj1, "retrieve first object from database by cursor" );
+
+};
+
+test 'remove' => sub {
+    my $self = shift;
+    ok( my $obj1 = $self->person->create, "created object" );
+    ok( my $obj2 = $self->person->find_one( { name => $obj1->name } ),
+        "found it in DB" );
+    is( $obj1->_id, $obj2->_id, "objects are same" );
+    ok( $obj1->remove,   "removed first object" );
+    ok( $obj1->_removed, "object marked as removed" );
+    ok( !$obj2->sync,    "sync of second objects finds it removed" );
+    ok( !$obj2->sync,    "repeated sync is NOP" );
+    ok( $obj2->_removed, "second object now marked as removed" );
+    ok( $obj2->remove,   "remove on second object is NOP" );
+};
+
+test 'count' => sub {
+    my $self = shift;
+
+    my @obs =
+      map { my $n = $_; ok( my $p = $self->person->create, "created object $n" ); $p }
+      1 .. 10;
+
+    is( $self->person->count, 10, "collection count" );
+    is( $self->person->count( { name => $obs[0]->name } ), 1, "count with query" );
+};
+
+test 'update' => sub {
+    my $self = shift;
+    my $obj  = $self->person->create;
+    ok( my $obj2 = $self->person->find_id( $obj->_id ), "getting copy of object" );
+    is( $obj->likes, 0, "likes 0" );
+    my $count = 3;
+    for my $i ( 1 .. $count ) {
+        $obj->update( { '$inc' => { 'likes' => 1 } } );
+        is( $obj->likes, $i, "likes $i" );
+    }
+    is( $obj2->likes, 0, "copy has old likes count" );
+    ok( $obj2->sync, "sync'd copy" );
+    is( $obj2->likes, $count, "copy has correct likes count" );
+    ok( $obj->remove, "removing object" );
+    ok( !$obj->update( { '$inc' => { 'likes' => 1 } } ),
+        "update after remove return false" );
+    ok(
+        !$obj2->update( { '$inc' => { 'likes' => 1 } } ),
+        "update on copy after remove return false"
+    );
+    ok( $obj2->is_removed, "copy marked removed" );
+};
+
+run_me;
+done_testing;
+# COPYRIGHT
+# vim: ts=4 sts=4 sw=4 et:
