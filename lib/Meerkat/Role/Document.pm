@@ -13,7 +13,7 @@ use MooseX::Storage::Engine;
 use Carp qw/croak/;
 use MongoDB::OID;
 use Type::Params qw/compile Invocant/;
-use Types::Standard qw/HashRef Object Optional Defined/;
+use Types::Standard qw/slurpy :types/;
 
 use namespace::autoclean;
 
@@ -72,12 +72,12 @@ sub update {
     return $self->_collection->update( $self, $update );
 }
 
-my %operators = (
+my %scalar_operators = (
     set => '$set',
     inc => '$inc',
 );
 
-while ( my ( $k, $v ) = each %operators ) {
+while ( my ( $k, $v ) = each %scalar_operators ) {
     Sub::Install::install_sub(
         {
             as   => "update_$k",
@@ -85,6 +85,26 @@ while ( my ( $k, $v ) = each %operators ) {
                 state $check = compile( Object, Defined, Defined );
                 my ( $self, $field, $value ) = $check->(@_);
                 return $self->update( { $v => { "$field" => $value } } );
+              }
+        }
+    );
+}
+
+my %array_operators = ( push => '$push', );
+
+while ( my ( $k, $v ) = each %array_operators ) {
+    Sub::Install::install_sub(
+        {
+            as   => "update_$k",
+            code => sub {
+                state $check = compile( Object, Defined, slurpy ArrayRef );
+                my ( $self, $field, $list ) = $check->(@_);
+                if ( @$list == 1 ) {
+                    return $self->update( { $v => { "$field" => $list->[0] } } );
+                }
+                else {
+                    return $self->update( { $v => { "$field" => { '$each' => $list } } } );
+                }
               }
         }
     );

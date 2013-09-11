@@ -1,6 +1,7 @@
-use strict;
+# COPYRIGHTuse strict;
 use warnings;
 use Test::Roo;
+use Test::Deep '!blessed';
 use Test::FailWarnings;
 use Test::Fatal;
 use Test::Requires qw/MongoDB::MongoClient/;
@@ -30,7 +31,28 @@ test 'update_inc' => sub {
     is( $got->likes, 1, "attribute incremented in DB" );
 };
 
+test 'update_push' => sub {
+    my $self     = shift;
+    my $obj      = $self->create_person;
+    my @expected = qw/cool trendy/;
+
+    # push list
+    $obj->update_push( tags => @expected );
+    cmp_deeply( $obj->tags, bag(@expected), "pushed values in object" );
+    my $got = $self->person->find_id( $obj->_id );
+    cmp_deeply( $got->tags, bag(@expected), "pushed values in object" );
+
+    # push hashref
+    my $hashref = { key => 'value' };
+    $obj->update_push( tags => $hashref );
+    cmp_deeply( $obj->tags, bag( @expected, $hashref ), "pushed hashref in object" );
+    $got = $self->person->find_id( $obj->_id );
+    cmp_deeply( $got->tags, bag( @expected, $hashref ), "pushed hashref in object" );
+
+};
+
 run_me;
 done_testing;
 # COPYRIGHT
+# vim: ts=4 sts=4 sw=4 et:
 # vim: ts=4 sts=4 sw=4 et:
