@@ -40,14 +40,44 @@ test 'update_push' => sub {
     $obj->update_push( tags => @expected );
     cmp_deeply( $obj->tags, bag(@expected), "pushed values in object" );
     my $got = $self->person->find_id( $obj->_id );
-    cmp_deeply( $got->tags, bag(@expected), "pushed values in object" );
+    cmp_deeply( $got->tags, bag(@expected), "pushed values in DB" );
 
     # push hashref
     my $hashref = { key => 'value' };
     $obj->update_push( tags => $hashref );
     cmp_deeply( $obj->tags, bag( @expected, $hashref ), "pushed hashref in object" );
     $got = $self->person->find_id( $obj->_id );
-    cmp_deeply( $got->tags, bag( @expected, $hashref ), "pushed hashref in object" );
+    cmp_deeply( $got->tags, bag( @expected, $hashref ), "pushed hashref in DB" );
+
+};
+
+test 'update_add' => sub {
+    my $self     = shift;
+    my $obj      = $self->create_person;
+    my @expected = qw/cool trendy/;
+
+    # push list twice
+    $obj->update_add( tags => @expected );
+    $obj->update_add( tags => @expected );
+    cmp_deeply( $obj->tags, bag(@expected), "values only show up once in object" );
+    my $got = $self->person->find_id( $obj->_id );
+    cmp_deeply( $got->tags, bag(@expected), "values only show up once in DB" );
+
+    # push hashref twice
+    my $hashref = { key => 'value' };
+    $obj->update_add( tags => $hashref );
+    $obj->update_add( tags => $hashref );
+    cmp_deeply(
+        $obj->tags,
+        bag( @expected, $hashref ),
+        "hashref only shows up once in object"
+    );
+    $got = $self->person->find_id( $obj->_id );
+    cmp_deeply(
+        $got->tags,
+        bag( @expected, $hashref ),
+        "hashref only shows up once in DB"
+    );
 
 };
 

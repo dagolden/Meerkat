@@ -90,7 +90,10 @@ while ( my ( $k, $v ) = each %scalar_operators ) {
     );
 }
 
-my %array_operators = ( push => '$push', );
+my %array_operators = (
+    push => '$push',
+    add  => '$addToSet'
+);
 
 while ( my ( $k, $v ) = each %array_operators ) {
     Sub::Install::install_sub(
