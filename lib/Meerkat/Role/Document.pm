@@ -72,45 +72,37 @@ sub update {
     return $self->_collection->update( $self, $update );
 }
 
-my %scalar_operators = (
-    set => '$set',
-    inc => '$inc',
+my %update_operators = (
+    set  => { op => '$set',      type => 'scalar' },
+    inc  => { op => '$inc',      type => 'scalar' },
+    push => { op => '$push',     type => 'array' },
+    add  => { op => '$addToSet', type => 'array' },
 );
 
-while ( my ( $k, $v ) = each %scalar_operators ) {
-    Sub::Install::install_sub(
-        {
-            as   => "update_$k",
-            code => sub {
-                state $check = compile( Object, Defined, Defined );
-                my ( $self, $field, $value ) = $check->(@_);
-                return $self->update( { $v => { "$field" => $value } } );
-              }
-        }
-    );
-}
-
-my %array_operators = (
-    push => '$push',
-    add  => '$addToSet'
-);
-
-while ( my ( $k, $v ) = each %array_operators ) {
-    Sub::Install::install_sub(
-        {
-            as   => "update_$k",
-            code => sub {
-                state $check = compile( Object, Defined, slurpy ArrayRef );
-                my ( $self, $field, $list ) = $check->(@_);
-                if ( @$list == 1 ) {
-                    return $self->update( { $v => { "$field" => $list->[0] } } );
-                }
-                else {
-                    return $self->update( { $v => { "$field" => { '$each' => $list } } } );
-                }
-              }
-        }
-    );
+# stringify "$field" just in a case someone gave an object
+while ( my ( $k, $v ) = each %update_operators ) {
+    my $spec = { as => "update_$k" };
+    my $op = $v->{op};
+    if ( $v->{type} eq 'scalar' ) {
+        $spec->{code} = sub {
+            state $check = compile( Object, Defined, Defined );
+            my ( $self, $field, $value ) = $check->(@_);
+            return $self->update( { $op => { "$field" => $value } } );
+        };
+    }
+    else {
+        $spec->{code} = sub {
+            state $check = compile( Object, Defined, slurpy ArrayRef );
+            my ( $self, $field, $list ) = $check->(@_);
+            if ( @$list == 1 ) {
+                return $self->update( { $op => { "$field" => $list->[0] } } );
+            }
+            else {
+                return $self->update( { $op => { "$field" => { '$each' => $list } } } );
+            }
+        };
+    }
+    Sub::Install::install_sub($spec);
 }
 
 1;
