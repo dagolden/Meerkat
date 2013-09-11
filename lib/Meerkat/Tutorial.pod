@@ -101,8 +101,9 @@ in sync.  B<Always create objects from a Meerkat::Collection>.
 
 
     # modify an object atomically
-    $obj->update_inc ({ likes => 1               }); # increment a counter
-    $obj->update_push({ tags => [qw/hot trendy/] }); # push to an array
+    $obj->update_set ( name  => "Warry Lall"   ); # change a field
+    $obj->update_inc ( likes => 1              ); # increment a counter
+    $obj->update_push( tags  => qw/hot trendy/ ); # push to an array
 
     $obj->sync
 
