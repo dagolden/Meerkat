@@ -14,19 +14,109 @@ Test that you can connect to the C<test> database from the C<mongo> shell:
 
 =head2 Creating Your Document Model
 
-...
+A Meerkat document is just a Moose class with the L<Meerkat::Role::Document>
+role applied.  This tutorial uses the same C<MyModel::Person> class used for
+testing.  It has a required C<name> attribute, and also attributes for C<likes>
+and C<tags>:
+
+    package MyModel::Person;
+
+    use Moose 2;
+
+    with 'Meerkat::Role::Document';
+
+    has name => (
+        is       => 'ro',
+        isa      => 'Str',
+        required => 1,
+    );
+
+    has likes => (
+        is      => 'ro',
+        isa     => 'Num',
+        default => 0,
+    );
+
+
+    has tags => (
+        is      => 'ro',
+        isa     => 'ArrayRef',
+        default => sub { [] },
+    );
+
+    1;
+
+Meerkat::Role::Document will add and populate the C<_id>, C<_collection> and
+C<_removed> attributes automatically.
+
+Note that all attributes are B<read-only>.  You don't want to modify these
+directly or you'll be out of sync with the database and bad things will happen.
+You will update attributes using the C<update> methods, shown later.
+
+=head2 Connecting to the Database
+
+Once the document class is written, using it requires a L<Meerkat> object
+to manage the connection to the database:
+
+    use Meerkat;
+
+    my $meerkat = Meerkat->new(
+        namespace      => "MyModel",
+        database_name  => "test",
+    );
+
+By specifying a namespace of "MyModel", the object will return collections
+for classes underneath that namespace.  The example above will connect to the
+default MongoDB on localhost.  If your MongoDB is running on a different host
+or port, you could pass C<client_options> which will be passed through to the
+L<MongoDB::MongoClient> constructor.
+
+Actually working with the document class requires getting a
+L<Meerkat::Collection> object from the Meerkat object.  A Meerkat collection
+associates a Perl class name with a specific MongoDB collection in the database
+managed by the Meerkat object.
+
+    my $person = $meerkat->collection("Person"); # MyModel::Person
+
+The collection name is derived from the Perl class by replacing "::" with "_".
+So "MyModel::Person" objects are stored in the "MyModel_Person" collection.
+In this tutorial example, that collection is in the "test" database on the
+localhost MongoDB.
 
 =head2 Creating New Documents
 
-...
+A Meerkat document needs to know what collection it came from, so the
+Meerkat::Collection is a factory for constructing objects.
+
+    my $obj = $person->create( name => "Larry Wall" );
+
+When the object is created, it is immediately inserted into the database.
+(If an error occurs, an exception is thrown.)
+
+Don't create objects directly from the document class.  Even if you provide a
+Meerkat::Collection, the documents won't be inserted and things will never get
+in sync.  B<Always create objects from a Meerkat::Collection>.
 
 =head2 Updating, Synchronizing and Removing Documents
 
-...
+
+    # modify an object atomically
+    $obj->update_inc ({ likes => 1               }); # increment a counter
+    $obj->update_push({ tags => [qw/hot trendy/] }); # push to an array
+
+    $obj->sync
+
+    $obj->remove
+
 
 =head2 Searching the Database
 
-...
+    # find a single object
+    my $copy = $person->find_one( { name => 'John' } );
+
+    # get a Meerkat::Cursor for multiple objects
+    my $cursor = $person->find( $query_hashref );
+
 
 =cut
 

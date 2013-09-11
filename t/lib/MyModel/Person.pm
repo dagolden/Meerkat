@@ -16,4 +16,10 @@ has likes => (
     default => 0,
 );
 
+has tags => (
+    is      => 'ro',
+    isa     => 'ArrayRef',
+    default => sub { [] },
+);
+
 1;
