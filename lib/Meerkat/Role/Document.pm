@@ -72,10 +72,22 @@ sub update {
     return $self->_collection->update( $self, $update );
 }
 
-sub update_set {
-    state $check = compile( Object, Defined, Defined );
-    my ( $self, $field, $value ) = $check->(@_);
-    return $self->update( { '$set' => { "$field" => $value } } );
+my %operators = (
+    set => '$set',
+    inc => '$inc',
+);
+
+while ( my ( $k, $v ) = each %operators ) {
+    Sub::Install::install_sub(
+        {
+            as   => "update_$k",
+            code => sub {
+                state $check = compile( Object, Defined, Defined );
+                my ( $self, $field, $value ) = $check->(@_);
+                return $self->update( { $v => { "$field" => $value } } );
+              }
+        }
+    );
 }
 
 1;

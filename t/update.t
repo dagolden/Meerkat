@@ -21,6 +21,15 @@ test 'update_set' => sub {
     is( $got->name, "Larry Wall", "attribute set in DB" );
 };
 
+test 'update_inc' => sub {
+    my $self = shift;
+    my $obj  = $self->create_person;
+    $obj->update_inc( likes => 1 );
+    is( $obj->likes, 1, "attribute incremented in object" );
+    my $got = $self->person->find_id( $obj->_id );
+    is( $got->likes, 1, "attribute incremented in DB" );
+};
+
 run_me;
 done_testing;
 # COPYRIGHT
