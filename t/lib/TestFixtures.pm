@@ -64,6 +64,15 @@ before each_test => sub {
     $self->meerkat->_database->drop;
 };
 
+#--------------------------------------------------------------------------#
+# methods
+#--------------------------------------------------------------------------#
+
+sub create_person {
+    my ($self) = @_;
+    return $self->person->create( name => $self->faker->name );
+}
+
 1;
 # COPYRIGHT
 # vim: ts=4 sts=4 sw=4 et:

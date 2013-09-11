@@ -32,9 +32,8 @@ test 'create arguments' => sub {
 test 'round trip' => sub {
     my $self = shift;
 
-    ok( my $obj1 = $self->person->create( name => $self->faker->name ),
-        "created object" );
-    ok( $self->person->create( name => $self->faker->name ), "created second object" );
+    ok( my $obj1 = $self->create_person, "created object" );
+    ok( $self->create_person, "created second object" );
 
     my $obj2 = $self->person->find_id( $obj1->_id );
     is_deeply( $obj2, $obj1, "retrieve first object from database by OID" );
@@ -51,8 +50,7 @@ test 'round trip' => sub {
 
 test 'remove' => sub {
     my $self = shift;
-    ok( my $obj1 = $self->person->create( name => $self->faker->name ),
-        "created object" );
+    ok( my $obj1 = $self->create_person, "created object" );
     ok( my $obj2 = $self->person->find_one( { name => $obj1->name } ),
         "found it in DB" );
     is( $obj1->_id, $obj2->_id, "objects are same" );
@@ -68,12 +66,8 @@ test 'count' => sub {
     my $self = shift;
 
     my @obs =
-      map {
-        my $n = $_;
-        ok( my $p = $self->person->create( name => $self->faker->name ),
-            "created object $n" );
-        $p
-      } 1 .. 10;
+      map { my $n = $_; ok( my $p = $self->create_person, "created object $n" ); $p }
+      1 .. 10;
 
     is( $self->person->count, 10, "collection count" );
     is( $self->person->count( { name => $obs[0]->name } ), 1, "count with query" );
@@ -81,7 +75,7 @@ test 'count' => sub {
 
 test 'update' => sub {
     my $self = shift;
-    my $obj = $self->person->create( name => $self->faker->name );
+    my $obj  = $self->create_person;
     ok( my $obj2 = $self->person->find_id( $obj->_id ), "getting copy of object" );
     is( $obj->likes, 0, "likes 0" );
     my $count = 3;

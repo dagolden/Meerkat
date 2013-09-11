@@ -14,7 +14,7 @@ with 'TestFixtures';
 
 test 'update_set' => sub {
     my $self = shift;
-    my $obj = $self->person->create( name => $self->faker->name );
+    my $obj  = $self->create_person;
     $obj->update_set( name => "Larry Wall" );
     is( $obj->name, "Larry Wall", "attribute set in object" );
     my $got = $self->person->find_id( $obj->_id );
