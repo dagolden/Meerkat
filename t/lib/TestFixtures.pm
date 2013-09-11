@@ -14,7 +14,7 @@ use Meerkat;
 
 has meerkat => (
     is  => 'lazy',
-    isa => InstanceOf['Meerkat'],
+    isa => InstanceOf ['Meerkat'],
 );
 
 sub _build_meerkat {
@@ -30,14 +30,14 @@ has meerkat_options => (
 sub _build_meerkat_options {
     my ($self) = @_;
     return {
-        namespace     => 'MKTest',
+        namespace     => 'MyModel',
         database_name => 'test',
     };
 }
 
 has person => (
-    is => 'lazy',
-    isa => InstanceOf['Meerkat::Collection'],
+    is  => 'lazy',
+    isa => InstanceOf ['Meerkat::Collection'],
 );
 
 sub _build_person {
