@@ -13,7 +13,7 @@ use MooseX::Storage::Engine;
 use Carp qw/croak/;
 use MongoDB::OID;
 use Type::Params qw/compile Invocant/;
-use Types::Standard qw/HashRef Object Optional/;
+use Types::Standard qw/HashRef Object Optional Defined/;
 
 use namespace::autoclean;
 
@@ -50,14 +50,6 @@ has _removed => (
     default   => 0,
 );
 
-# do $inc, etc?
-sub update {
-    state $check = compile( Object, HashRef );
-    my ( $self, $update ) = $check->(@_);
-    return if $self->_removed; # NOP
-    return $self->_collection->update( $self, $update );
-}
-
 sub remove {
     state $check = compile(Object);
     my ($self) = $check->(@_);
@@ -73,8 +65,18 @@ sub sync {
     return $self->_collection->sync($self);
 }
 
-# XXX wrap field modification functions and pass them to the Collection?
-# Should fields be ro *unless* modification functions are used?
+sub update {
+    state $check = compile( Object, HashRef );
+    my ( $self, $update ) = $check->(@_);
+    return if $self->_removed;   # NOP
+    return $self->_collection->update( $self, $update );
+}
+
+sub update_set {
+    state $check = compile( Object, Defined, Defined );
+    my ( $self, $field, $value ) = $check->(@_);
+    return $self->update( { '$set' => { "$field" => $value } } );
+}
 
 1;
 
