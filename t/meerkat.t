@@ -4,12 +4,9 @@ use Test::Roo;
 use Test::FailWarnings;
 use Test::Fatal;
 use Test::Requires qw/MongoDB::MongoClient/;
-use Data::Faker qw/Name/;
 
 my $conn = eval { MongoDB::MongoClient->new; };
 plan skip_all => "No MongoDB on localhost" unless $conn;
-
-my $faker = Data::Faker->new;
 
 use lib 't/lib';
 
@@ -28,15 +25,16 @@ test 'collection' => sub {
 test 'create arguments' => sub {
     my $self = shift;
     ok( !eval { $self->person->create }, "no attributes fails required" );
-    ok( $self->person->create( name => $faker->name ), "list" );
-    ok( $self->person->create( { name => $faker->name } ), "hashref" );
+    ok( $self->person->create( name => $self->faker->name ), "list" );
+    ok( $self->person->create( { name => $self->faker->name } ), "hashref" );
 };
 
 test 'round trip' => sub {
     my $self = shift;
 
-    ok( my $obj1 = $self->person->create( name => $faker->name ), "created object" );
-    ok( $self->person->create( name => $faker->name ), "created second object" );
+    ok( my $obj1 = $self->person->create( name => $self->faker->name ),
+        "created object" );
+    ok( $self->person->create( name => $self->faker->name ), "created second object" );
 
     my $obj2 = $self->person->find_id( $obj1->_id );
     is_deeply( $obj2, $obj1, "retrieve first object from database by OID" );
@@ -53,7 +51,8 @@ test 'round trip' => sub {
 
 test 'remove' => sub {
     my $self = shift;
-    ok( my $obj1 = $self->person->create( name => $faker->name ), "created object" );
+    ok( my $obj1 = $self->person->create( name => $self->faker->name ),
+        "created object" );
     ok( my $obj2 = $self->person->find_one( { name => $obj1->name } ),
         "found it in DB" );
     is( $obj1->_id, $obj2->_id, "objects are same" );
@@ -71,7 +70,8 @@ test 'count' => sub {
     my @obs =
       map {
         my $n = $_;
-        ok( my $p = $self->person->create( name => $faker->name ), "created object $n" );
+        ok( my $p = $self->person->create( name => $self->faker->name ),
+            "created object $n" );
         $p
       } 1 .. 10;
 
@@ -81,7 +81,7 @@ test 'count' => sub {
 
 test 'update' => sub {
     my $self = shift;
-    my $obj = $self->person->create( name => $faker->name );
+    my $obj = $self->person->create( name => $self->faker->name );
     ok( my $obj2 = $self->person->find_id( $obj->_id ), "getting copy of object" );
     is( $obj->likes, 0, "likes 0" );
     my $count = 3;

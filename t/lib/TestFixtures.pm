@@ -7,10 +7,20 @@ package TestFixtures;
 use Test::Roo::Role;
 use MooX::Types::MooseLike::Base qw/:all/;
 use Meerkat;
+use Data::Faker qw/Name/;
 
 #--------------------------------------------------------------------------#
 # fixtures
 #--------------------------------------------------------------------------#
+
+has faker => (
+    is  => 'lazy',
+    isa => InstanceOf ['Data::Faker'],
+);
+
+sub _build_faker {
+    return Data::Faker->new;
+}
 
 has meerkat => (
     is  => 'lazy',
