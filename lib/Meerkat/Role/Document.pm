@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 package Meerkat::Role::Document;
-# ABSTRACT: Moose role for object persistence with Meerkat
+# ABSTRACT: Enhances a Moose object with Meerkat methods and metadata
 # VERSION
 
 use Moose::Role 2;
@@ -50,25 +50,36 @@ has _removed => (
     default   => 0,
 );
 
-sub remove {
-    state $check = compile(Object);
-    my ($self) = $check->(@_);
-    return 1 if $self->_removed; # NOP
-    return $self->_collection->remove($self);
-}
+=method new
 
-# returns true if synced or false if missing
-sub sync {
-    state $check = compile(Object);
-    my ($self) = $check->(@_);
-    return 0 if $self->_removed; # NOP
-    return $self->_collection->sync($self);
-}
+B<Don't call this directly!>  Create your objects through the
+L<Meerkat::Collection> or your object won't be added to the database.
+
+    $meerkat->collection("Person")->create( name => "Joe" );
+
+=method update
+
+    $obj->update( { '$set' => { 'name' => "Moe" } } );
+
+Executes a MongoDB update command on the associated document and updates the
+object's attributes.  You should only use MongoDB update operators to modify
+the document's fields or you risk creating an invalid document that can't be
+synchronized.
+
+Returns true if synced.  If the document has been removed, the method returns
+false and the object is marked as removed; subsequent C<update>, C<sync> or
+C<remove> calls will do nothing and return false.
+
+This command is intended for custom updates with unusual logic or operators.
+Many typical updates can be accomplished with the C<update_*> methods described
+below.
+
+=cut
 
 sub update {
     state $check = compile( Object, HashRef );
     my ( $self, $update ) = $check->(@_);
-    return if $self->_removed;   # NOP
+    return if $self->_removed; # NOP
     return $self->_collection->update( $self, $update );
 }
 
@@ -83,6 +94,8 @@ my %update_operators = (
 );
 
 # stringify "$field" just in a case someone gave an object
+# XXX really should validate that the field is of appropriate type
+
 while ( my ( $k, $v ) = each %update_operators ) {
     my $spec = { as => "update_$k" };
     my $op = $v->{op};
@@ -124,13 +137,67 @@ while ( my ( $k, $v ) = each %update_operators ) {
     Sub::Install::install_sub($spec);
 }
 
+=method sync
+
+    $obj->sync;
+
+Updates object attributes from the database.  Returns true if synced.  If the
+document has been removed, the method returns false and the object is marked as
+removed; subsequent C<update>, C<sync> or C<remove> calls will do nothing and
+return false.
+
+=cut
+
+sub sync {
+    state $check = compile(Object);
+    my ($self) = $check->(@_);
+    return 0 if $self->_removed; # NOP
+    return $self->_collection->sync($self);
+}
+
+=method remove
+
+    $obj->remove;
+
+Removes the associated document from the database.  The object is marked as
+removed; subsequent C<update>, C<sync> or C<remove> calls will do nothing and
+return false.
+
+=method is_removed
+
+    if ( $obj->is_removed ) { ... }
+
+Predicate method for whether the object is known to be removed from the
+database.
+
+=cut
+
+sub remove {
+    state $check = compile(Object);
+    my ($self) = $check->(@_);
+    return 1 if $self->_removed; # NOP
+    return $self->_collection->remove($self);
+}
+
 1;
 
 =for Pod::Coverage method_names_here
 
 =head1 SYNOPSIS
 
-  use Meerkat::Role::Document;
+    package MyModel::Person;
+
+    use Moose 2;
+
+    with 'Meerkat::Role::Document';
+
+    has name => (
+        is       => 'ro',
+        isa      => 'Str',
+        required => 1,
+    );
+
+    1;
 
 =head1 DESCRIPTION
 
@@ -143,7 +210,9 @@ Good luck!
 
 =head1 SEE ALSO
 
-Maybe other modules do related things.
+=for :list
+* L<Meerkat>
+* L<Meerkat::Tutorial>
 
 =cut
 
