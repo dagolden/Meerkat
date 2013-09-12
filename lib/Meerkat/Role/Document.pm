@@ -83,58 +83,46 @@ sub update {
     return $self->_collection->update( $self, $update );
 }
 
-my %update_operators = (
-    set    => { op => '$set',      type => 'scalar' },
-    inc    => { op => '$inc',      type => 'scalar' },
-    push   => { op => '$push',     type => 'array_push' },
-    add    => { op => '$addToSet', type => 'array_push' },
-    pop    => { op => '$pop',      type => 'array_pop', direction => 1 },
-    shift  => { op => '$pop',      type => 'array_pop', direction => -1 },
-    remove => { op => '$pullAll',  type => 'array_rm' },
-);
+sub update_set {
+    state $check = compile( Object, Defined, Defined );
+    my ( $self, $field, $value ) = $check->(@_);
+    return $self->update( { '$set' => { "$field" => $value } } );
+}
 
-# stringify "$field" just in a case someone gave an object
-# XXX really should validate that the field is of appropriate type
+sub update_inc {
+    state $check = compile( Object, Defined, Defined );
+    my ( $self, $field, $value ) = $check->(@_);
+    return $self->update( { '$inc' => { "$field" => $value } } );
+}
 
-while ( my ( $k, $v ) = each %update_operators ) {
-    my $spec = { as => "update_$k" };
-    my $op = $v->{op};
-    if ( $v->{type} eq 'scalar' ) {
-        $spec->{code} = sub {
-            state $check = compile( Object, Defined, Defined );
-            my ( $self, $field, $value ) = $check->(@_);
-            return $self->update( { $op => { "$field" => $value } } );
-        };
-    }
-    elsif ( $v->{type} eq 'array_push' ) {
-        $spec->{code} = sub {
-            state $check = compile( Object, Defined, slurpy ArrayRef );
-            my ( $self, $field, $list ) = $check->(@_);
-            if ( @$list == 1 ) {
-                return $self->update( { $op => { "$field" => $list->[0] } } );
-            }
-            else {
-                return $self->update( { $op => { "$field" => { '$each' => $list } } } );
-            }
-        };
-    }
-    elsif ( $v->{type} eq 'array_pop' ) {
-        my $dir = $v->{direction};
-        $spec->{code} = sub {
-            state $check = compile( Object, Defined );
-            my ( $self, $field ) = $check->(@_);
-            return $self->update( { $op => { "$field" => $dir } } );
-        };
-    }
-    elsif ( $v->{type} eq 'array_rm' ) {
-        $spec->{code} = sub {
-            state $check = compile( Object, Defined, slurpy ArrayRef );
-            my ( $self, $field, $list ) = $check->(@_);
-            return $self->update( { $op => { "$field" => $list } } );
-        };
-    }
+sub update_push {
+    state $check = compile( Object, Defined, slurpy ArrayRef );
+    my ( $self, $field, $list ) = $check->(@_);
+    return $self->update( { '$push' => { "$field" => { '$each' => $list } } } );
+}
 
-    Sub::Install::install_sub($spec);
+sub update_add {
+    state $check = compile( Object, Defined, slurpy ArrayRef );
+    my ( $self, $field, $list ) = $check->(@_);
+    return $self->update( { '$addToSet' => { "$field" => { '$each' => $list } } } );
+}
+
+sub update_pop {
+    state $check = compile( Object, Defined );
+    my ( $self, $field ) = $check->(@_);
+    return $self->update( { '$pop' => { "$field" => 1 } } );
+}
+
+sub update_shift {
+    state $check = compile( Object, Defined );
+    my ( $self, $field ) = $check->(@_);
+    return $self->update( { '$pop' => { "$field" => -1 } } );
+}
+
+sub update_remove {
+    state $check = compile( Object, Defined, slurpy ArrayRef );
+    my ( $self, $field, $list ) = $check->(@_);
+    return $self->update( { '$pullAll' => { "$field" => $list } } );
 }
 
 =method update_clear
