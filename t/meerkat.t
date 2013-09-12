@@ -54,12 +54,12 @@ test 'remove' => sub {
     ok( my $obj2 = $self->person->find_one( { name => $obj1->name } ),
         "found it in DB" );
     is( $obj1->_id, $obj2->_id, "objects are same" );
-    ok( $obj1->remove,   "removed first object" );
-    ok( $obj1->_removed, "object marked as removed" );
-    ok( !$obj2->sync,    "sync of second objects finds it removed" );
-    ok( !$obj2->sync,    "repeated sync is NOP" );
-    ok( $obj2->_removed, "second object now marked as removed" );
-    ok( $obj2->remove,   "remove on second object is NOP" );
+    ok( $obj1->remove,     "removed first object" );
+    ok( $obj1->is_removed, "object marked as removed" );
+    ok( !$obj2->sync,      "sync of second objects finds it removed" );
+    ok( !$obj2->sync,      "repeated sync is NOP" );
+    ok( $obj2->is_removed, "second object now marked as removed" );
+    ok( $obj2->remove,     "remove on second object is NOP" );
 };
 
 test 'count' => sub {
@@ -94,6 +94,26 @@ test 'update' => sub {
         "update on copy after remove return false"
     );
     ok( $obj2->is_removed, "copy marked removed" );
+};
+
+test 'reinsert' => sub {
+    my $self = shift;
+    ok( my $obj1 = $self->create_person, "created object" );
+    ok( my $obj2 = $self->person->find_one( { name => $obj1->name } ),
+        "found it in DB" );
+    ok( !$obj1->reinsert, "reinsert first object should fail" );
+    ok( $obj2->update_set( name => 'Larry Wall' ), "changed name via second object" );
+    ok( $obj1->reinsert( force => 1 ), "forced reinsertion of first object" );
+    ok( $obj2->sync, "sync second object" );
+    is( $obj2->name, $obj1->name, "insertion overrode name change" );
+    ok( $obj1->remove,      "removed first object" );
+    ok( $obj1->is_removed,  "object marked as removed" );
+    ok( !$obj2->sync,       "sync of second object finds it removed" );
+    ok( $obj1->reinsert,    "reinserted first object" );
+    ok( !$obj1->is_removed, "first object not marked as removed" );
+    ok( $obj2->sync,        "sync of second object succeeds" );
+    ok( !$obj2->is_removed, "second object not marked as removed" );
+    is( $obj2->name, $obj1->name, "objects have same name" );
 };
 
 run_me;

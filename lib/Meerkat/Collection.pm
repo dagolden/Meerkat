@@ -7,6 +7,7 @@ package Meerkat::Collection;
 # VERSION
 
 use Moose 2;
+use MooseX::AttributeShortcuts;
 use Meerkat::Cursor;
 
 use Class::Load qw/load_class/;
@@ -32,9 +33,8 @@ has class => (
 );
 
 has collection_name => (
-    is         => 'ro',
-    isa        => 'Str',
-    lazy_build => 1,
+    is  => 'lazy',
+    isa => 'Str',
 );
 
 sub _build_collection_name {
@@ -102,17 +102,28 @@ sub remove {
     state $check = compile( Object, Object );
     my ( $self, $obj ) = $check->(@_);
     $self->_mongo_collection->remove( { _id => $obj->_id } );
-    return $self->_mark_removed($obj);
+    $obj->_set_removed(1);
+    return 1;
+}
+
+sub reinsert {
+    state $check = compile( Object, Object );
+    my ( $self, $obj ) = $check->(@_);
+    $self->_save($obj);
+    $obj->_set_removed(0);
+    return 1;
 }
 
 sub sync {
     state $check = compile( Object, Object );
     my ( $self, $obj ) = $check->(@_);
     if ( my $data = $self->_mongo_collection->find_one( { _id => $obj->_id } ) ) {
-        return $self->_sync( $self->thaw_object($data) => $obj );
+        $self->_sync( $self->thaw_object($data) => $obj );
+        $obj->_set_removed(0);
+        return 1;
     }
     else {
-        $self->_mark_removed($obj);
+        $obj->_set_removed(1);
         return; # false means removed
     }
 }
@@ -128,10 +139,11 @@ sub update {
         }
     );
     if ($data) {
-        return $self->_sync( $self->thaw_object($data) => $obj );
+        $self->_sync( $self->thaw_object($data) => $obj );
+        return 1;
     }
     else {
-        $self->_mark_removed($obj);
+        $obj->_set_removed(1);
         return; # false means removed
     }
 }
@@ -151,14 +163,6 @@ sub thaw_object {
 #--------------------------------------------------------------------------#
 # Private methods
 #--------------------------------------------------------------------------#
-
-sub _mark_removed {
-    state $check = compile( Object, Object );
-    my ( $self, $obj ) = $check->(@_);
-    my $removed = $obj->meta->find_attribute_by_name("_removed");
-    $removed->set_value( $obj, 1 );
-    return 1;
-}
 
 sub _mongo_collection {
     state $check = compile(Object);

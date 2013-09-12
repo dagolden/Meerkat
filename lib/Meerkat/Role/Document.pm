@@ -7,6 +7,7 @@ package Meerkat::Role::Document;
 # VERSION
 
 use Moose::Role 2;
+use MooseX::AttributeShortcuts;
 use MooseX::Storage;
 use MooseX::Storage::Engine;
 
@@ -43,11 +44,21 @@ has _id => (
     default => sub { MongoDB::OID->new },
 );
 
+=method is_removed
+
+    if ( $obj->is_removed ) { ... }
+
+Returns a boolean value indicating whether the associated document was removed
+from the database.
+
+=cut
+
 has _removed => (
-    is        => 'ro',
-    isa       => 'Bool',
-    predicate => 'is_removed',
-    default   => 0,
+    is      => 'rw',
+    isa     => 'Bool',
+    reader  => 'is_removed',
+    writer  => '_set_removed',
+    default => 0,
 );
 
 =method new
@@ -79,7 +90,7 @@ below.
 sub update {
     state $check = compile( Object, HashRef );
     my ( $self, $update ) = $check->(@_);
-    return if $self->_removed; # NOP
+    return if $self->is_removed; # NOP
     return $self->_collection->update( $self, $update );
 }
 
@@ -153,7 +164,6 @@ return false.
 sub sync {
     state $check = compile(Object);
     my ($self) = $check->(@_);
-    return 0 if $self->_removed; # NOP
     return $self->_collection->sync($self);
 }
 
@@ -177,8 +187,15 @@ database.
 sub remove {
     state $check = compile(Object);
     my ($self) = $check->(@_);
-    return 1 if $self->_removed; # NOP
+    return 1 if $self->is_removed; # NOP
     return $self->_collection->remove($self);
+}
+
+sub reinsert {
+    state $check = compile( Object, slurpy Dict [ force => Optional [Bool] ] );
+    my ( $self, $options ) = $check->(@_);
+    return if !$self->is_removed and !$options->{force}; # NOP
+    return $self->_collection->reinsert($self);
 }
 
 1;
