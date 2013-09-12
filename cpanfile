@@ -24,6 +24,7 @@ on 'test' => sub {
   requires "List::Util" => "0";
   requires "MooX::Types::MooseLike::Base" => "0";
   requires "Parallel::Iterator" => "0";
+  requires "Test::Deep" => "0";
   requires "Test::FailWarnings" => "0";
   requires "Test::Fatal" => "0";
   requires "Test::More" => "0";
