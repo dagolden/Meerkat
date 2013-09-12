@@ -32,6 +32,15 @@ for my $type (qw/MongoDB::OID Meerkat::Collection/) {
     );
 }
 
+=method new
+
+B<Don't call this directly!>  Create your objects through the
+L<Meerkat::Collection> or your object won't be added to the database.
+
+    my $obj = $meerkat->collection("Person")->create( name => "Joe" );
+
+=cut
+
 has _collection => (
     is       => 'ro',
     isa      => 'Meerkat::Collection',
@@ -48,7 +57,7 @@ has _id => (
 
     if ( $obj->is_removed ) { ... }
 
-Returns a boolean value indicating whether the associated document was removed
+Returns true or false indicating whether the associated document was removed
 from the database.
 
 =cut
@@ -60,13 +69,6 @@ has _removed => (
     writer  => '_set_removed',
     default => 0,
 );
-
-=method new
-
-B<Don't call this directly!>  Create your objects through the
-L<Meerkat::Collection> or your object won't be added to the database.
-
-    $meerkat->collection("Person")->create( name => "Joe" );
 
 =method update
 
