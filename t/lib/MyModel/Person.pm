@@ -22,7 +22,7 @@ has tags => (
     default => sub { [] },
 );
 
-has slang => (
+has parents => (
     is      => 'ro',
     isa     => 'HashRef',
     default => sub { {} },

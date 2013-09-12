@@ -25,11 +25,11 @@ test 'update_set' => sub {
 test 'update_set_deep' => sub {
     my $self   = shift;
     my $obj    = $self->create_person;
-    my $phrase = "Hello, how are you?";
-    $obj->update_set( 'slang.howdy' => $phrase );
-    is( $obj->slang->{howdy}, $phrase, "attribute set in object" );
+    my $mother = "Nancy Drew";
+    $obj->update_set( 'parents.mother' => $mother );
+    is( $obj->parents->{mother}, $mother, "attribute set in object" );
     my $got = $self->person->find_id( $obj->_id );
-    is( $got->slang->{howdy}, $phrase, "attribute set in DB" );
+    is( $got->parents->{mother}, $mother, "attribute set in DB" );
 };
 
 test 'update_inc' => sub {
