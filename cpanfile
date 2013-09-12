@@ -7,6 +7,7 @@ requires "Moose::Role" => "2";
 requires "MooseX::AttributeShortcuts" => "0";
 requires "MooseX::Storage" => "0";
 requires "MooseX::Storage::Engine" => "0";
+requires "Try::Tiny" => "0";
 requires "Type::Params" => "0";
 requires "Types::Standard" => "0";
 requires "namespace::autoclean" => "0";
