@@ -81,6 +81,22 @@ test 'update_add' => sub {
 
 };
 
+test 'update_pop_shift' => sub {
+    my $self     = shift;
+    my $obj      = $self->create_person;
+    my @expected = qw/cool trendy awesome/;
+
+    # push list
+    $obj->update_push( tags => @expected );
+    $obj->update_pop('tags');
+    $obj->update_shift('tags');
+
+    cmp_deeply( $obj->tags, ['trendy'], "array correct in object after pop & shift" );
+    my $got = $self->person->find_id( $obj->_id );
+    cmp_deeply( $got->tags, ['trendy'], "array correct in DB after pop & shift" );
+
+};
+
 run_me;
 done_testing;
 # COPYRIGHT
