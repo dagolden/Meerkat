@@ -70,6 +70,35 @@ has _removed => (
     default => 0,
 );
 
+=method _indexes
+
+    $class->_indexes;
+
+Returns an empty list.  If you want to define indexes for use with the
+L<ensure_indexes|Meerkat::Collection/ensure_indexes> method of
+L<Meerkat::Collection>, create your own C<_indexes> method that returns a list
+of array references.  The array references can have an optional initial hash
+reference of indexing options, followed by ordered key & value pairs in the
+usual MongoDB way.
+
+You must provide index fields in an array reference because Perl hashes are not
+ordered and a compound index requires an order.
+
+For example:
+
+    sub _indexes {
+        return (
+            [ { unique => 1 }, name => 1 ],
+            [ name => 1, zip_code => 1 ]
+            [ likes => -1 ],
+            [ location => '2dsphere' ],
+        );
+    }
+
+=cut
+
+sub _indexes { return }
+
 =method update
 
     $obj->update( { '$set' => { 'name' => "Moe" } } );

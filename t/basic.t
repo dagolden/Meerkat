@@ -121,6 +121,16 @@ test 'reinsert' => sub {
     is( $obj2->name, $obj1->name, "objects have same name" );
 };
 
+test 'create indexes' => sub {
+    my $self = shift;
+    $self->create_person;
+    ok( $self->person->ensure_indexes, "created indexes" );
+    my @got      = $self->person->_mongo_collection->get_indexes;
+    my @expected = $self->person->class->_indexes;
+    is( scalar @got, 1 + @expected, "correct number of indexes" )
+      or diag explain \@expected;
+};
+
 run_me;
 done_testing;
 # COPYRIGHT

@@ -97,6 +97,19 @@ sub find {
     return Meerkat::Cursor->new( cursor => $cursor, collection => $self );
 }
 
+sub ensure_indexes {
+    state $check = compile(Object);
+    my ($self) = $check->(@_);
+    state $aoa_check = compile( slurpy ArrayRef [ArrayRef] );
+    my ($aoa) = $aoa_check->( $self->class->_indexes );
+    for my $index (@$aoa) {
+        my @copy = @$index;
+        my $options = shift @copy if ref $copy[0] eq 'HASH';
+        $self->_mongo_collection->ensure_index( \@copy, $options );
+    }
+    return 1;
+}
+
 #--------------------------------------------------------------------------#
 # Public methods on individual objects; typically called by object to
 # modify itself and synchronize with the database

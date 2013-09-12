@@ -28,4 +28,8 @@ has slang => (
     default => sub { {} },
 );
 
+sub _indexes {
+    return ( [ { unique => 1 }, name => 1 ], [ tags => 1, likes => 1 ], );
+}
+
 1;
