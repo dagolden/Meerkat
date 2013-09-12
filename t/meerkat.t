@@ -78,6 +78,11 @@ test 'update' => sub {
     my $obj  = $self->create_person;
     ok( my $obj2 = $self->person->find_id( $obj->_id ), "getting copy of object" );
     is( $obj->likes, 0, "likes 0" );
+    like(
+        exception { $obj->update( { name => "Joe Bob" } ) },
+        qr/only accepts MongoDB update operators/,
+        "exception thrown updating without update operators"
+    );
     my $count = 3;
     for my $i ( 1 .. $count ) {
         $obj->update( { '$inc' => { 'likes' => 1 } } );

@@ -90,6 +90,8 @@ below.
 sub update {
     state $check = compile( Object, HashRef );
     my ( $self, $update ) = $check->(@_);
+    croak "The update method only accepts MongoDB update operators"
+      if grep { /^[^\$]/ } keys %$update;
     return if $self->is_removed; # NOP
     return $self->_collection->update( $self, $update );
 }
