@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 package Meerkat;
-# ABSTRACT: Manage MongoDB documents as Moose objects
+# ABSTRACT: MongoDB documents as Moose objects
 # VERSION
 
 # Dependencies
