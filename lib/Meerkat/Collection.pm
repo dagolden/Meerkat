@@ -10,11 +10,15 @@ use Moose 2;
 use MooseX::AttributeShortcuts;
 use Meerkat::Cursor;
 
+use Carp qw/croak/;
 use Class::Load qw/load_class/;
 use Type::Params qw/compile Invocant/;
 use Types::Standard qw/slurpy ArrayRef Defined HashRef Object Optional/;
+use Try::Tiny;
 
 use namespace::autoclean;
+
+our @CARP_NOT = qw/Meerkat::Role::Document Try::Tiny/;
 
 #--------------------------------------------------------------------------#
 # Public attributes
@@ -118,7 +122,7 @@ sub sync {
     state $check = compile( Object, Object );
     my ( $self, $obj ) = $check->(@_);
     if ( my $data = $self->_mongo_collection->find_one( { _id => $obj->_id } ) ) {
-        $self->_sync( $self->thaw_object($data) => $obj );
+        $self->_sync( $data => $obj );
         $obj->_set_removed(0);
         return 1;
     }
@@ -139,7 +143,7 @@ sub update {
         }
     );
     if ($data) {
-        $self->_sync( $self->thaw_object($data) => $obj );
+        $self->_sync( $data => $obj );
         return 1;
     }
     else {
@@ -179,8 +183,15 @@ sub _save {
 }
 
 sub _sync {
-    state $check = compile( Object, Object, Object );
-    my ( $self, $src, $tgt ) = $check->(@_);
+    state $check = compile( Object, HashRef, Object );
+    my ( $self, $data, $tgt ) = $check->(@_);
+    my $src = try {
+        $self->thaw_object($data);
+    }
+    catch {
+        s/ at \S+ line \d+.*//ms;
+        croak "Could not inflate updated document with _id=$data->{_id} because: $_";
+    };
     for my $tgt_attr ( $tgt->meta->get_all_attributes ) {
         my $src_attr = $src->meta->find_attribute_by_name( $tgt_attr->name );
         $tgt_attr->set_value( $tgt, $src_attr->get_value($src) );
