@@ -97,6 +97,21 @@ test 'update_pop_shift' => sub {
 
 };
 
+test 'update_remove' => sub {
+    my $self     = shift;
+    my $obj      = $self->create_person;
+    my @expected = qw/cool trendy awesome killer/;
+
+    # push list
+    $obj->update_push( tags => @expected );
+    $obj->update_remove( 'tags', qw/killer trendy/ );
+
+    cmp_deeply( $obj->tags, bag(qw/cool awesome/),
+        "array correct in object after remove" );
+    my $got = $self->person->find_id( $obj->_id );
+    cmp_deeply( $got->tags, bag(qw/cool awesome/), "array correct in DB after remove" );
+};
+
 run_me;
 done_testing;
 # COPYRIGHT

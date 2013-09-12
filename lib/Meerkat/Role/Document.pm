@@ -73,12 +73,13 @@ sub update {
 }
 
 my %update_operators = (
-    set   => { op => '$set',      type => 'scalar' },
-    inc   => { op => '$inc',      type => 'scalar' },
-    push  => { op => '$push',     type => 'array_push' },
-    add   => { op => '$addToSet', type => 'array_push' },
-    pop   => { op => '$pop',      type => 'array_pop', direction => 1 },
-    shift => { op => '$pop',      type => 'array_pop', direction => -1 },
+    set    => { op => '$set',      type => 'scalar' },
+    inc    => { op => '$inc',      type => 'scalar' },
+    push   => { op => '$push',     type => 'array_push' },
+    add    => { op => '$addToSet', type => 'array_push' },
+    pop    => { op => '$pop',      type => 'array_pop', direction => 1 },
+    shift  => { op => '$pop',      type => 'array_pop', direction => -1 },
+    remove => { op => '$pullAll',  type => 'array_rm' },
 );
 
 # stringify "$field" just in a case someone gave an object
@@ -104,7 +105,7 @@ while ( my ( $k, $v ) = each %update_operators ) {
             }
         };
     }
-    else {
+    elsif ( $v->{type} eq 'array_pop' ) {
         my $dir = $v->{direction};
         $spec->{code} = sub {
             state $check = compile( Object, Defined );
@@ -112,6 +113,14 @@ while ( my ( $k, $v ) = each %update_operators ) {
             return $self->update( { $op => { "$field" => $dir } } );
         };
     }
+    elsif ( $v->{type} eq 'array_rm' ) {
+        $spec->{code} = sub {
+            state $check = compile( Object, Defined, slurpy ArrayRef );
+            my ( $self, $field, $list ) = $check->(@_);
+            return $self->update( { $op => { "$field" => $list } } );
+        };
+    }
+
     Sub::Install::install_sub($spec);
 }
 
