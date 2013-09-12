@@ -137,6 +137,20 @@ while ( my ( $k, $v ) = each %update_operators ) {
     Sub::Install::install_sub($spec);
 }
 
+=method update_clear
+
+    $obj->update_clear( 'tags' );
+
+Clears an array field, setting it back to an empty array reference.
+
+=cut
+
+sub update_clear {
+    state $check = compile( Object, Defined );
+    my ( $self, $field ) = $check->(@_);
+    return $self->update( { '$set' => { "$field" => [] } } );
+}
+
 =method sync
 
     $obj->sync;

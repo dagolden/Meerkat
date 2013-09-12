@@ -122,6 +122,20 @@ test 'update_remove' => sub {
     cmp_deeply( $got->tags, bag(qw/cool awesome/), "array correct in DB after remove" );
 };
 
+test 'update_clear' => sub {
+    my $self     = shift;
+    my $obj      = $self->create_person;
+    my @expected = qw/cool trendy awesome killer/;
+
+    # push list
+    $obj->update_push( tags => @expected );
+    $obj->update_clear('tags');
+
+    cmp_deeply( $obj->tags, [], "array empty in object after clear" );
+    my $got = $self->person->find_id( $obj->_id );
+    cmp_deeply( $got->tags, [], "array empty in DB after clear" );
+};
+
 run_me;
 done_testing;
 # COPYRIGHT
