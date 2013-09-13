@@ -25,8 +25,9 @@ test 'collection' => sub {
 test 'create arguments' => sub {
     my $self = shift;
     ok( !eval { $self->person->create }, "no attributes fails required" );
-    ok( $self->person->create( name => $self->faker->name ), "list" );
-    ok( $self->person->create( { name => $self->faker->name } ), "hashref" );
+    ok( $self->person->create( name => $self->faker->name, birthday => time ), "list" );
+    ok( $self->person->create( { name => $self->faker->name, birthday => time } ),
+        "hashref" );
 };
 
 test 'round trip' => sub {

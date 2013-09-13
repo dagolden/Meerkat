@@ -7,7 +7,7 @@ package TestFixtures;
 use Test::Roo::Role;
 use MooX::Types::MooseLike::Base qw/:all/;
 use Meerkat;
-use Data::Faker qw/Name/;
+use Data::Faker qw/Name DateTime/;
 
 #--------------------------------------------------------------------------#
 # fixtures
@@ -69,8 +69,12 @@ before each_test => sub {
 #--------------------------------------------------------------------------#
 
 sub create_person {
-    my ($self) = @_;
-    return $self->person->create( name => $self->faker->name );
+    my ( $self, @args ) = @_;
+    return $self->person->create(
+        name     => $self->faker->name,
+        birthday => $self->faker->unixtime,
+        @args
+    );
 }
 
 1;

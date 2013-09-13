@@ -56,6 +56,10 @@ has database_name => (
 A hash reference of L<MongoDB::MongoClient> options that will be passed to its
 C<connect> method.
 
+Note: The C<dt_type> will be forced to C<undef> so that the MongoDB client will
+provide time values as epoch seconds.  See the L<Meerkat::Cookbook> for more on
+dealing with date and times.
+
 =cut
 
 has client_options => (
@@ -68,7 +72,14 @@ has client_options => (
 sub BUILD {
     my ($self) = @_;
     my $client_options = $self->client_options;
+
+    # Default to using the provided database for authentication
     $client_options->{db_name} //= $self->database_name;
+
+    # We force MongoDB to convert its internal datetimes to epoch values so we
+    # can proxy them with Meerkat::DateTime objects; storage of DateTime or
+    # DateTime::Tiny are automatically converted regardless of this setting.
+    $client_options->{dt_type} = undef;
 }
 
 #--------------------------------------------------------------------------#
@@ -238,13 +249,15 @@ child processes.
 
 =usage
 
-Meerkat divides functional responsibilities across four classes:
+Meerkat divides functional responsibilities across six classes:
 
 =for :list
 * L<Meerkat> — associates a Perl namespace to a MongoDB connection and database
 * L<Meerkat::Collection> — associates a Perl class within a namespace to a MongoDB collection
 * L<Meerkat::Role::Document> — enhances a Moose object with Meerkat methods and metadata
 * L<Meerkat::Cursor> — proxies a result cursor and inflates documents into objects
+* L<Meerkat::DateTime> — proxies an epoch value with lazy DateTime inflation
+* L<Meerkat::Types> — provides type definition and coercion for Meerkat::DateTime
 
 You define your documents as Moose classes that consumes the Meerkat::Role::Document
 role.  This gives them several support methods to update, synchronize or remove
@@ -264,7 +277,12 @@ If you use the Meerkat::Collection object to run a query that could have
 multiple results, it returns a Meerkat::Cursor object that wraps the
 MongoDB::Cursor and inflates results into objects from your model.
 
-See L<Meerkat::Tutorial> for more.
+Meerkat::DateTime lazily inflate floating point epoch seconds into a
+L<DateTime> object.  It's conceptually similar to L<DateTime::Tiny>, but based
+on the epoch seconds returned by the MongoDB client for its internal date value
+representation.
+
+See L<Meerkat::Tutorial> and L<Meerkat::Cookbook> for more.
 
 =head1 EXCEPTION HANDLING
 
@@ -332,8 +350,8 @@ Meerkat focuses on:
 * Simplicity and (to the extent possible) Moosey-ness
 * A document-centric data model
 
-Because it's less ambitious, Meerkat is smaller and less complex, currently
-about 400 lines of code split across four modules.
+Because it is less ambitious, Meerkat is smaller and less complex, currently
+about 450 lines of code split across six modules.
 
 =head1 SEE ALSO
 

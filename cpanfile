@@ -1,5 +1,6 @@
 requires "Carp" => "0";
 requires "Class::Load" => "0";
+requires "DateTime" => "0";
 requires "MongoDB" => "0";
 requires "MongoDB::OID" => "0";
 requires "Moose" => "2";
@@ -7,9 +8,11 @@ requires "Moose::Role" => "2";
 requires "MooseX::AttributeShortcuts" => "0";
 requires "MooseX::Storage" => "0";
 requires "MooseX::Storage::Engine" => "0";
+requires "MooseX::Types" => "0";
 requires "Try::Tiny" => "0";
 requires "Type::Params" => "0";
 requires "Types::Standard" => "0";
+requires "aliased" => "0";
 requires "namespace::autoclean" => "0";
 requires "perl" => "v5.10.0";
 requires "strict" => "0";
@@ -17,7 +20,7 @@ requires "warnings" => "0";
 
 on 'test' => sub {
   requires "Data::Faker" => "0";
-  requires "DateTime" => "0";
+  requires "DateTime::Tiny" => "0";
   requires "ExtUtils::MakeMaker" => "0";
   requires "File::Spec::Functions" => "0";
   requires "File::Temp" => "0";
@@ -33,6 +36,7 @@ on 'test' => sub {
   requires "Test::Requires" => "0";
   requires "Test::Roo" => "0";
   requires "Test::Roo::Role" => "0";
+  requires "Time::HiRes" => "0";
   requires "lib" => "0";
 };
 

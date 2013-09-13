@@ -29,14 +29,15 @@ my $person = $mk->collection("Person");
 
 ok( !$mk->_has_mongo_client, "_mongo_client is lazy (not set)" );
 $person->_mongo_collection->drop; # clear before testing
-ok( $person->create( name => $faker->name ), "created a document" );
+ok( $person->create( name => $faker->name, birthday => time ),
+    "created a document" );
 ok( $mk->_has_mongo_client, "_mongo_client is now set" );
 
 my $num_forks = 3;
 my $iter      = iterate(
     sub {
         my ( $id, $job ) = @_;
-        $person->create( name => $faker->name );
+        $person->create( name => $faker->name, birthday => time );
         return {
             pid        => $$,
             cached_pid => $mk->_pid,

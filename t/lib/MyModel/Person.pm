@@ -1,12 +1,20 @@
 package MyModel::Person;
 
 use Moose 2;
+use Meerkat::Types qw/:all/;
 
 with 'Meerkat::Role::Document';
 
 has name => (
     is       => 'ro',
     isa      => 'Str',
+    required => 1,
+);
+
+has birthday => (
+    is       => 'ro',
+    isa      => MeerkatDateTime,
+    coerce   => 1,
     required => 1,
 );
 
@@ -26,11 +34,6 @@ has parents => (
     is      => 'ro',
     isa     => 'HashRef',
     default => sub { {} },
-);
-
-has birthday => (
-    is  => 'ro',
-    isa => 'DateTime',
 );
 
 sub _indexes {
