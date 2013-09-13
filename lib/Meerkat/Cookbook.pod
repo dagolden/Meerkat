@@ -1,0 +1,23 @@
+# PODNAME: Meerkat::Cookbook
+# ABSTRACT: Meerkat examples with dos and don'ts
+
+=head1 COOKBOOK
+
+=head2 Date objects
+
+[talk about support for DateTime and DateTime::Tiny but not when
+defined via InstanceOf[...], etc.]
+
+[suggest translation to epoch values anyway]
+
+=head2 Embedded objects
+
+[what a mess. But if they can pack it will work.  But you can't
+easily update them unless you pack it yourself and update_set.
+Modifying the internals of an object on the DB is asking for trouble.]
+
+=head2 Handling deserialization errors
+
+[can force a reinsertion; or can remove it; or can fix manually in the DB]
+
+=cut
