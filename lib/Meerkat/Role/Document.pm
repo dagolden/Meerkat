@@ -23,7 +23,7 @@ with Storage;
 # pass through OID's without modification as MongoDB will
 # consume/provide them; pass through Meerkat::Collection
 # as Meerkat will strip/add as necessary
-for my $type (qw/MongoDB::OID Meerkat::Collection/) {
+for my $type (qw/MongoDB::OID Meerkat::Collection DateTime DateTime::Tiny/) {
     MooseX::Storage::Engine->add_custom_type_handler(
         $type => (
             expand   => sub { shift },

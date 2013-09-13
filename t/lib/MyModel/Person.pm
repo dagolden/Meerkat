@@ -28,6 +28,11 @@ has parents => (
     default => sub { {} },
 );
 
+has birthday => (
+    is  => 'ro',
+    isa => 'DateTime',
+);
+
 sub _indexes {
     return ( [ { unique => 1 }, name => 1 ], [ tags => 1, likes => 1 ], );
 }

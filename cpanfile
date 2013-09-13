@@ -17,6 +17,7 @@ requires "warnings" => "0";
 
 on 'test' => sub {
   requires "Data::Faker" => "0";
+  requires "DateTime" => "0";
   requires "ExtUtils::MakeMaker" => "0";
   requires "File::Spec::Functions" => "0";
   requires "File::Temp" => "0";
