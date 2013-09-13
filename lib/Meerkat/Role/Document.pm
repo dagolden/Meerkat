@@ -34,8 +34,8 @@ for my $type (qw/MongoDB::OID Meerkat::Collection DateTime DateTime::Tiny/) {
 
 =method new
 
-B<Don't call this directly!>  Create your objects through the
-L<Meerkat::Collection> or your object won't be added to the database.
+B<Don't call this directly!>  Create objects through the
+L<Meerkat::Collection> or they won't be added to the database.
 
     my $obj = $meerkat->collection("Person")->create( name => "Joe" );
 
@@ -53,15 +53,6 @@ has _id => (
     default => sub { MongoDB::OID->new },
 );
 
-=method is_removed
-
-    if ( $obj->is_removed ) { ... }
-
-Returns true or false indicating whether the associated document was removed
-from the database.
-
-=cut
-
 has _removed => (
     is      => 'rw',
     isa     => 'Bool',
@@ -69,35 +60,6 @@ has _removed => (
     writer  => '_set_removed',
     default => 0,
 );
-
-=method _indexes
-
-    $class->_indexes;
-
-Returns an empty list.  If you want to define indexes for use with the
-L<ensure_indexes|Meerkat::Collection/ensure_indexes> method of
-L<Meerkat::Collection>, create your own C<_indexes> method that returns a list
-of array references.  The array references can have an optional initial hash
-reference of indexing options, followed by ordered key & value pairs in the
-usual MongoDB way.
-
-You must provide index fields in an array reference because Perl hashes are not
-ordered and a compound index requires an order.
-
-For example:
-
-    sub _indexes {
-        return (
-            [ { unique => 1 }, name => 1 ],
-            [ name => 1, zip_code => 1 ]
-            [ likes => -1 ],
-            [ location => '2dsphere' ],
-        );
-    }
-
-=cut
-
-sub _indexes { return }
 
 =method update
 
@@ -303,7 +265,8 @@ return false.
 
     if ( $obj->is_removed ) { ... }
 
-Tests whether the object is known to be removed from the database.
+Returns true or false indicating whether the associated document was removed
+from the database.
 
 =cut
 
@@ -332,6 +295,37 @@ sub reinsert {
     return if !$self->is_removed and !$options->{force}; # NOP
     return $self->_collection->reinsert($self);
 }
+
+=method _indexes
+
+    $class->_indexes;
+
+Returns an empty list.  If you want to define indexes for use with the
+L<ensure_indexes|Meerkat::Collection/ensure_indexes> method of
+L<Meerkat::Collection>, create your own C<_indexes> method that returns a list
+of array references.  The array references can have an optional initial hash
+reference of indexing options, followed by ordered key & value pairs in the
+usual MongoDB way.
+
+You must provide index fields in an array reference because Perl hashes are not
+ordered and a compound index requires an order.
+
+For example:
+
+    sub _indexes {
+        return (
+            [ { unique => 1 }, name => 1 ],
+            [ name => 1, zip_code => 1 ]
+            [ likes => -1 ],
+            [ location => '2dsphere' ],
+        );
+    }
+
+See the L<Meerkat::Cookbook> for more information.
+
+=cut
+
+sub _indexes { return }
 
 1;
 
