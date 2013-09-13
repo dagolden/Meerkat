@@ -256,9 +256,13 @@ sub reinsert {
 This module might be cool, but you'd never know it from the lack
 of documentation.
 
-=head1 USAGE
+=usage
 
-Good luck!
+[describe how to use the role]
+
+[warn about lazy being inflated]
+
+[talk about MooseX::Storage and how to mark things to not be stored]
 
 =head1 SEE ALSO
 

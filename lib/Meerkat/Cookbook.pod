@@ -5,6 +5,17 @@
 
 =head2 Date objects
 
+Do you really need this?  MongoDB has support for inflating and deflating
+L<DateTime> and L<DateTime:Tiny> objects, but do you really need the
+overhead of doing so each time?
+
+I suggest configuring MongoDB with C<< dt_type => undef >> and storing
+epoch seconds in the database.  You can still C<update_set> a DateTime
+or DateTime::Tiny object and MongoDB will convert it to epoch seconds
+for you.
+
+If you want a DateTime object, consider inflating it it on demand.  (How?)
+
 [talk about support for DateTime and DateTime::Tiny but not when
 defined via InstanceOf[...], etc.]
 
@@ -12,9 +23,21 @@ defined via InstanceOf[...], etc.]
 
 =head2 Embedded objects
 
-[what a mess. But if they can pack it will work.  But you can't
-easily update them unless you pack it yourself and update_set.
-Modifying the internals of an object on the DB is asking for trouble.]
+Again, do you really want this?  If your objects are read-only, it might
+be OK, but if not, you'll be tempted to modify the data in the embedded
+object will then be out of sync with the database and you're screwed.
+
+If the object is read-only, and does the MooseX::Storage role, then
+it will be packed into the database on creation.  But if you update it,
+you have to pack the replacement object yourself.
+
+    $obj->update_set( 'embedded' => $new_embedded->pack );
+
+=head2 Preventing attributes from being serialized
+
+If you have private attributes that should not be serialized...
+
+[DoNotSerialize] -- good for lazy things in particular
 
 =head2 Handling deserialization errors
 
