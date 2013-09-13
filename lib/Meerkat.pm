@@ -195,7 +195,7 @@ __PACKAGE__->meta->make_immutable;
 
 1;
 
-=for Pod::Coverage get_mongo_collection
+=for Pod::Coverage BUILD get_mongo_collection
 
 =head1 SYNOPSIS
 

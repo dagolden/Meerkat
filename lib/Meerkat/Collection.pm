@@ -236,7 +236,7 @@ __PACKAGE__->meta->make_immutable;
 
 1;
 
-=for Pod::Coverage method_names_here
+=for Pod::Coverage BUILD
 
 =head1 SYNOPSIS
 
