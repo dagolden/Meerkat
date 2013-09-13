@@ -24,17 +24,37 @@ our @CARP_NOT = qw/Meerkat::Role::Document Try::Tiny/;
 # Public attributes
 #--------------------------------------------------------------------------#
 
+=attr meerkat (required)
+
+The Meerkat object that constructed the object.  It holds the MongoDB
+collections used to access the database.
+
+=cut
+
 has meerkat => (
     is       => 'ro',
     isa      => 'Meerkat',
     required => 1,
 );
 
+=attr class (required)
+
+The class name to associate with documents.
+
+=cut
+
 has class => (
     is       => 'ro',
-    isa      => 'Str',
+    isa      => 'Str', # XXX should check that the class does the role
     required => 1,
 );
+
+=attr collection_name
+
+The collection name to associate with the class.  Defaults to the
+name of the class with "::" replaced with "_".
+
+=cut
 
 has collection_name => (
     is  => 'lazy',
@@ -220,20 +240,42 @@ __PACKAGE__->meta->make_immutable;
 
 =head1 SYNOPSIS
 
-  use Meerkat::Collection;
+    use Meerkat;
+
+    my $meerkat = Meerkat->new(
+        namespace => "MyModel", database_name => "test"
+    );
+
+    my $coll = $meerkat->collection("Person"); # MyModel::Person
+
+    # create an object and insert it into the MongoDB collection
+    my $obj = $coll->create( name => 'John' );
+
+    # modify an object atomically
+    $obj->update_inc ({ likes => 1               }); # increment a counter
+    $obj->update_push({ tags => [qw/hot trendy/] }); # push to an array
+
+    # find a single object
+    my $copy = $coll->find_one( { name => 'John' } );
+
+    # get a Meerkat::Cursor for multiple objects
+    my $cursor = $coll->find( $query_hashref );
 
 =head1 DESCRIPTION
 
-This module might be cool, but you'd never know it from the lack
-of documentation.
+A Meerkat::Collection holds an association between your model class and a
+collection in the database.  This class does all the real work of creating,
+searching, updating, or deleting from the underlying MongoDB collection.
 
-=head1 USAGE
-
-Good luck!
+If you use the Meerkat::Collection object to run a query that could have
+multiple results, it returns a Meerkat::Cursor object that wraps the
+MongoDB::Cursor and inflates results into objects from your model.
 
 =head1 SEE ALSO
 
-Maybe other modules do related things.
+=for :list
+* L<Meerkat>
+* L<Meerkat::Tutorial>
 
 =cut
 
