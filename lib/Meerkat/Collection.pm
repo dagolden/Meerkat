@@ -124,7 +124,7 @@ sub ensure_indexes {
     my ($aoa) = $aoa_check->( $self->class->_indexes );
     for my $index (@$aoa) {
         my @copy = @$index;
-        my $options = shift @copy if ref $copy[0] eq 'HASH';
+        my $options = ref $copy[0] eq 'HASH' ? shift @copy : {};
         $self->_mongo_collection->ensure_index( \@copy, $options );
     }
     return 1;
@@ -270,12 +270,6 @@ searching, updating, or deleting from the underlying MongoDB collection.
 If you use the Meerkat::Collection object to run a query that could have
 multiple results, it returns a Meerkat::Cursor object that wraps the
 MongoDB::Cursor and inflates results into objects from your model.
-
-=head1 SEE ALSO
-
-=for :list
-* L<Meerkat>
-* L<Meerkat::Tutorial>
 
 =cut
 

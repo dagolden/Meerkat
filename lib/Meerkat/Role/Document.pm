@@ -104,17 +104,23 @@ sub _indexes { return }
     $obj->update( { '$set' => { 'name' => "Moe" } } );
 
 Executes a MongoDB update command on the associated document and updates the
-object's attributes.  You should only use MongoDB update operators to modify
-the document's fields or you risk creating an invalid document that can't be
-synchronized.
+object's attributes.  You should only use MongoDB L<update
+operators|http://docs.mongodb.org/manual/reference/operator/nav-update/> to
+modify the document's fields or you risk creating an invalid document that
+can't be synchronized.
 
-Returns true if synced.  If the document has been removed, the method returns
-false and the object is marked as removed; subsequent C<update>, C<sync> or
-C<remove> calls will do nothing and return false.
+Returns true if the updates is applied and synchronized.  If the document has
+been removed, the method returns false and the object is marked as removed;
+subsequent C<update>, C<sync> or C<remove> calls will do nothing and return
+false.
 
 This command is intended for custom updates with unusual logic or operators.
 Many typical updates can be accomplished with the C<update_*> methods described
 below.
+
+For all update methods, you can use a MongoDB nested field label to modify
+values deep into a data structure. For example C<parents.father> refers to
+C<< $obj->parents->{father} >>.
 
 =cut
 
@@ -127,11 +133,34 @@ sub update {
     return $self->_collection->update( $self, $update );
 }
 
+=method update_set
+
+    $obj->update_set( name => "Luke Skywalker" );
+
+Sets a field to a value.  This is the MongoDB C<$set> operator.  Returns true
+if the update is appplied and synchronized.  If the document has been removed,
+the method returns false and the object is marked as removed.
+
+=cut
+
 sub update_set {
     state $check = compile( Object, Defined, Defined );
     my ( $self, $field, $value ) = $check->(@_);
     return $self->update( { '$set' => { "$field" => $value } } );
 }
+
+=method update_inc
+
+    $obj->update_inc( likes => 1 );
+    $obj->update_inc( likes => -1 );
+
+Increments a field by a positive or negative value.  This is the MongoDB
+C<$inc> operator.  Returns true if the update is appplied and synchronized.  If
+the document has been removed, the method returns false and the object is
+marked as removed.
+
+
+=cut
 
 sub update_inc {
     state $check = compile( Object, Defined, Defined );
@@ -139,11 +168,35 @@ sub update_inc {
     return $self->update( { '$inc' => { "$field" => $value } } );
 }
 
+=method update_push
+
+    $obj->update_push( tags => qw/cool hot trendy/ );
+
+Pushes values onto an array reference field. This is the MongoDB C<$push>
+operator.  Returns true if the update is appplied and synchronized.  If the
+document has been removed, the method returns false and the object is marked as
+removed.
+
+
+=cut
+
 sub update_push {
     state $check = compile( Object, Defined, slurpy ArrayRef );
     my ( $self, $field, $list ) = $check->(@_);
     return $self->update( { '$push' => { "$field" => { '$each' => $list } } } );
 }
+
+=method update_add
+
+    $obj->update_add( tags => qw/cool hot trendy/ );
+
+Pushs values onto an array reference field, but only if they do not already
+exist in the array.  This is the MongoDB C<$addToSet> operator.  Returns true
+if the update is appplied and synchronized.  If the document has been removed,
+the method returns false and the object is marked as removed.
+
+
+=cut
 
 sub update_add {
     state $check = compile( Object, Defined, slurpy ArrayRef );
@@ -151,17 +204,53 @@ sub update_add {
     return $self->update( { '$addToSet' => { "$field" => { '$each' => $list } } } );
 }
 
+=method update_pop
+
+    $obj->update_pop( 'tags' );
+
+Removes a value from the end of the array.  This is the MongoDB C<$pop>
+operator with a direction of "1".  Returns true if the update is appplied and
+synchronized.  If the document has been removed, the method returns false and
+the object is marked as removed.
+
+
+=cut
+
 sub update_pop {
     state $check = compile( Object, Defined );
     my ( $self, $field ) = $check->(@_);
     return $self->update( { '$pop' => { "$field" => 1 } } );
 }
 
+=method update_shift
+
+    $obj->update_shift( 'tags' );
+
+Removes a value from the front of the array.  This is the MongoDB C<$pop>
+operator with a direction of "-1".  Returns true if the update is appplied and
+synchronized.  If the document has been removed, the method returns false and
+the object is marked as removed.
+
+
+=cut
+
 sub update_shift {
     state $check = compile( Object, Defined );
     my ( $self, $field ) = $check->(@_);
     return $self->update( { '$pop' => { "$field" => -1 } } );
 }
+
+=method update_remove
+
+    $obj->update_remove( tags => qw/cool hot/ );
+
+Removes a list of values from the array.  This is the MongoDB C<$pullAll>
+operator.  Returns true if the update is appplied and synchronized.  If the
+document has been removed, the method returns false and the object is marked as
+removed.
+
+
+=cut
 
 sub update_remove {
     state $check = compile( Object, Defined, slurpy ArrayRef );
@@ -173,7 +262,9 @@ sub update_remove {
 
     $obj->update_clear( 'tags' );
 
-Clears an array field, setting it back to an empty array reference.
+Clears an array field, setting it back to an empty array reference.  Returns
+true if the update is appplied and synchronized.  If the document has been
+removed, the method returns false and the object is marked as removed.
 
 =cut
 
@@ -212,8 +303,7 @@ return false.
 
     if ( $obj->is_removed ) { ... }
 
-Predicate method for whether the object is known to be removed from the
-database.
+Tests whether the object is known to be removed from the database.
 
 =cut
 
@@ -224,6 +314,18 @@ sub remove {
     return $self->_collection->remove($self);
 }
 
+=method reinsert
+
+    $obj->reinsert;
+    $obj->reinsert( force => 1 );
+
+Reinserts a removed document.  If the C<force> option is true, then it will be
+reinserted even if the document has not been removed, overwriting any existing
+document in the database.  Returns false if the document is not removed (unless
+the force option is true).  Returns true if the document has been reinserted.
+
+=cut
+
 sub reinsert {
     state $check = compile( Object, slurpy Dict [ force => Optional [Bool] ] );
     my ( $self, $options ) = $check->(@_);
@@ -233,9 +335,11 @@ sub reinsert {
 
 1;
 
-=for Pod::Coverage method_names_here
+=for Pod::Coverage BUILD
 
 =head1 SYNOPSIS
+
+Your model class:
 
     package MyModel::Person;
 
@@ -249,26 +353,81 @@ sub reinsert {
         required => 1,
     );
 
+    has likes => (
+        is      => 'ro',
+        isa     => 'Num',
+        default => 0,
+    );
+
+    has tags => (
+        is      => 'ro',
+        isa     => 'ArrayRef',
+        default => sub { [] },
+    );
+
     1;
+
+In your code:
+
+    # create a document
+    my $meerkat = Meerkat->new( @options );
+    my $person = $meerkat->collection("Person");
+    my $obj = $person->create( name => "Larry" );
+
+    # change document in the database and update object
+    $obj->update_set( name => "Moe" );
+    $obj->update_inc( likes => 1 );
+    $obj->update_push( tags => qw/cool hot trendyy/ );
+
+    # get any other updates from the database
+    $obj->sync;
+
+    # delete it
+    $obj->remove;
 
 =head1 DESCRIPTION
 
-This module might be cool, but you'd never know it from the lack
-of documentation.
+This role enhances a Moose class with attributes and methods needed to operate
+in tandem with a L<Meerkat::Collection>.
 
-=usage
+The resulting object is a projection of the document state in the database.
+Update methods change the state atomically in the database and synchronize
+the object with the new state in the database (including other changes from
+other sources).
 
-[describe how to use the role]
+=head2 Consuming the role
 
-[warn about lazy being inflated]
+When you apply this role to your Moose class, it provides and manages the
+C<_id> attribute for you.  This attribute is meant to be public, but keeps
+the leading underscore for consistency with L<MongoDB> classes.
 
-[talk about MooseX::Storage and how to mark things to not be stored]
+The rest of the attributes should be read-only.  Modifying attributes directly
+in the object will not be reflected in the database and will be lost the next
+time you synchronize.
 
-=head1 SEE ALSO
+Objects are serialized with L<MooseX::Storage>.  Any attributes that should
+not be serialized must have the C<DoNotSerialize> trait:
 
-=for :list
-* L<Meerkat>
-* L<Meerkat::Tutorial>
+    has 'expensive' => (
+        traits => [ 'DoNotSerialize' ],
+        is     => 'lazy',
+        isa    => 'HeavyObject',
+    );
+
+Attributes with embedded objects are not well supported.  See the
+L<Meerkat::Cookbook> for more.
+
+=head2 Working with objects
+
+Create objects from an associated Meerkat::Collection, not with C<new>.
+
+    my $obj = $person->create( %attributes );
+
+That will construct the object, instatiate all lazy attributes (except those
+marked C<DoNoSerialize>) and store the new document into the database.
+
+Then, use the various update methods to modify state if you need to.  Use
+C<sync> to refresh the object with any remote changes from the database.
 
 =cut
 

@@ -9,6 +9,12 @@ package Meerkat::Cursor;
 # Dependencies
 use Moose 2;
 
+=attr cursor (required)
+
+A L<MongoDB::Cursor> object
+
+=cut
+
 has cursor => (
     is       => 'ro',
     isa      => 'MongoDB::Cursor',
@@ -18,6 +24,12 @@ has cursor => (
         qw( explain count reset has_next next info all ),
     ],
 );
+
+=attr collection (required)
+
+A L<Meerkat::Collection> used for inflating results.
+
+=cut
 
 has collection => (
     is       => 'ro',
@@ -47,16 +59,12 @@ around 'next' => sub {
 
 =head1 DESCRIPTION
 
-This module might be cool, but you'd never know it from the lack
-of documentation.
+When a L<Meerkat::Collection> method returns a query cursor, it provides this
+proxy for a L<MongoDB::Cursor>.  See documentation of that module for usage
+information.
 
-=head1 USAGE
-
-Good luck!
-
-=head1 SEE ALSO
-
-Maybe other modules do related things.
+The only difference is that the C<next> method will return objects of the class
+associated with the originating L<Meerkat::Collection>.
 
 =cut
 

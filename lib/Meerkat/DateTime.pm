@@ -64,17 +64,11 @@ This module provides a way to lazily inflate floating point
 epoch seconds into a DateTime object.  It's conceptually similar
 to DateTime::Tiny, but without all the year, month, day, etc. fields.
 
-It has L<MooseX::Storage> support to serialize just as the epoch value.
+The L<Meerkat::Types> module provides Moose type support and coercions and
+L<MooseX::Storage> type handling to simplify having a Meerkat::DateTime
+attribute.
 
-The L<Meerkat::Types> module provides Moose type support and coercions
-to simplify having a Meerkat::DateTime attribute.
-
-=head1 SEE ALSO
-
-=for :list
-* L<Meerkat>
-* L<Meerkat::Tutorial>
-* L<Meerkat::Cookbook>
+See the L<Merkat::Cookbook> for more on handling dates and times.
 
 =cut
 

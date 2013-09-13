@@ -58,7 +58,7 @@ C<connect> method.
 
 Note: The C<dt_type> will be forced to C<undef> so that the MongoDB client will
 provide time values as epoch seconds.  See the L<Meerkat::Cookbook> for more on
-dealing with date and times.
+dealing with dates and times.
 
 =cut
 
@@ -277,9 +277,9 @@ If you use the Meerkat::Collection object to run a query that could have
 multiple results, it returns a Meerkat::Cursor object that wraps the
 MongoDB::Cursor and inflates results into objects from your model.
 
-Meerkat::DateTime lazily inflate floating point epoch seconds into a
-L<DateTime> object.  It's conceptually similar to L<DateTime::Tiny>, but based
-on the epoch seconds returned by the MongoDB client for its internal date value
+Meerkat::DateTime lazily inflates floating point epoch seconds into L<DateTime>
+objects.  It's conceptually similar to L<DateTime::Tiny>, but based on the
+epoch seconds returned by the MongoDB client for its internal date value
 representation.
 
 See L<Meerkat::Tutorial> and L<Meerkat::Cookbook> for more.
@@ -354,6 +354,14 @@ Because it is less ambitious, Meerkat is smaller and less complex, currently
 about 450 lines of code split across six modules.
 
 =head1 SEE ALSO
+
+=head2 Meerkat documentation
+
+=for :list
+* L<Meerkat::Tutorial>
+* L<Meerkat::Cookbook>
+
+=head2 Other MongoDB resource
 
 =for :list
 * L<MongoDB::MongoClient>

@@ -60,17 +60,9 @@ This module defines Moose types and coercions.
 This type is a L<Meerkat::DateTime>.  It defines coercions from C<Num> (an epoch value),
 L<DateTime> and L<DateTime::Tiny>.
 
-It also has a L<MooseX::Storage> type handler setup that 'collapses' to a
+It also sets up a L<MooseX::Storage> type handler that 'collapses' to a
 DateTime object for storage by the MongoDB client, but 'expands' from an epoch
 value provided by the MongoDB client back into a Meerkat::DateTime object.
-
-=head1 SEE ALSO
-
-=for :list
-* L<Meerkat>
-* L<Meerkat::DateTime>
-* L<Meerkat::Tutorial>
-* L<Meerkat::Cookbook>
 
 =cut
 
