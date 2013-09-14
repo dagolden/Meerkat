@@ -12,8 +12,8 @@ use MooseX::AttributeShortcuts;
 
 use Meerkat::Collection;
 use MongoDB;
-use Type::Params qw/compile Invocant/;
-use Types::Standard qw/HashRef Object Optional Str/;
+use Type::Params qw/compile/;
+use Types::Standard qw/:types/;
 
 use namespace::autoclean;
 

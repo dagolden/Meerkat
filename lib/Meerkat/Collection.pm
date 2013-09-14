@@ -12,8 +12,8 @@ use Meerkat::Cursor;
 
 use Carp qw/croak/;
 use Class::Load qw/load_class/;
-use Type::Params qw/compile Invocant/;
-use Types::Standard qw/slurpy ArrayRef Defined HashRef Object Optional/;
+use Type::Params qw/compile/;
+use Types::Standard qw/slurpy :types/;
 use Try::Tiny;
 
 use namespace::autoclean;

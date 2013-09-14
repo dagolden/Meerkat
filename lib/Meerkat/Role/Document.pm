@@ -13,7 +13,7 @@ use MooseX::Storage::Engine;
 
 use Carp qw/croak/;
 use MongoDB::OID;
-use Type::Params qw/compile Invocant/;
+use Type::Params qw/compile/;
 use Types::Standard qw/slurpy :types/;
 
 use namespace::autoclean;
