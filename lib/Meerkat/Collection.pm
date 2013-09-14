@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 package Meerkat::Collection;
-# ABSTRACT: Associate class, database and collection
+# ABSTRACT: Associate a class, database and MongoDB collection
 # VERSION
 
 use Moose 2;
@@ -85,8 +85,8 @@ sub BUILD {
 
     my $obj = $person->create( name => 'John' );
 
-Creates an object of the type associated with the Meerkat::Collection and
-inserts it into the C<collection_name> in the database.  Returns the object on
+Creates an object of the class associated with the Meerkat::Collection and
+inserts it into the associated collection in the database.  Returns the object on
 success or throws an error on failure.
 
 Any arguments given are passed directly to the associated class constructor.
@@ -108,7 +108,7 @@ sub create {
     my $count = $person->count;
     my $count = $person->count( $query );
 
-Returns the number of documents in the C<collection_name> or throws an error on
+Returns the number of documents in the associated collection or throws an error on
 failure.  If a hash reference is provided, it is passed as a query parameter to
 the MongoDB L<count|MongoDB::Collection/count> method.
 
@@ -130,7 +130,7 @@ if one occurs.  This is a shorthand for the same query via C<find_one>:
 
     $person->find_one( { _id => $id } );
 
-However, C<find_id> can take both a scalar C<_id> or a L<MongoDB::OID> object
+However, C<find_id> can take either a scalar C<_id> or a L<MongoDB::OID> object
 as an argument.
 
 =cut
@@ -167,9 +167,9 @@ sub find_one {
 
 Executes a query against C<collection_name>.  It returns a L<Meerkat::Cursor>
 or throws an error on failure.  If a hash reference is provided, it is passed
-as a query parameter to the MongoDB L<count|MongoDB::Collection/find> method,
+as a query parameter to the MongoDB L<find|MongoDB::Collection/find> method,
 otherwise all documents are returned.  Iterating the cursor will return
-documents of the associated class.
+objects of the associated class.
 
 =cut
 
@@ -184,9 +184,10 @@ sub find {
 
     $person->ensure_indexes;
 
-Executes MongoDB's L<ensure_index|MongoDB::Collection/ensure_index> for
-every index returned by the C<_index> method of the associated class.
-Returns true on success or throws an error if one occurs.
+Executes MongoDB's L<ensure_index|MongoDB::Collection/ensure_index> for every
+index returned by the C<_index> method of the associated class.  Returns true
+on success or throws an error if one occurs. See L<Meerkat::Role::Document> for
+more.
 
 =cut
 
@@ -324,7 +325,7 @@ __PACKAGE__->meta->make_immutable;
     my $copy = $person->find_one( { name => 'John' } );
 
     # get a Meerkat::Cursor for multiple objects
-    my $cursor = $person->find( { tag =>  );
+    my $cursor = $person->find( { tag => 'hot' } );
 
 =head1 DESCRIPTION
 

@@ -37,7 +37,7 @@ for my $type (qw/MongoDB::OID Meerkat::Collection DateTime DateTime::Tiny/) {
 B<Don't call this directly!>  Create objects through the
 L<Meerkat::Collection> or they won't be added to the database.
 
-    my $obj = $meerkat->collection("Person")->create( name => "Joe" );
+    my $obj = $person->create( name => "Joe" );
 
 =cut
 
@@ -66,12 +66,11 @@ has _removed => (
     $obj->update( { '$set' => { 'name' => "Moe" } } );
 
 Executes a MongoDB update command on the associated document and updates the
-object's attributes.  You should only use MongoDB L<update
+object's attributes.  You must only use MongoDB L<update
 operators|http://docs.mongodb.org/manual/reference/operator/nav-update/> to
-modify the document's fields or you risk creating an invalid document that
-can't be synchronized.
+modify the document's fields.
 
-Returns true if the updates is applied and synchronized.  If the document has
+Returns true if the updates are applied and synchronized.  If the document has
 been removed, the method returns false and the object is marked as removed;
 subsequent C<update>, C<sync> or C<remove> calls will do nothing and return
 false.
@@ -100,7 +99,7 @@ sub update {
     $obj->update_set( name => "Luke Skywalker" );
 
 Sets a field to a value.  This is the MongoDB C<$set> operator.  Returns true
-if the update is appplied and synchronized.  If the document has been removed,
+if the update is applied and synchronized.  If the document has been removed,
 the method returns false and the object is marked as removed.
 
 =cut
@@ -117,7 +116,7 @@ sub update_set {
     $obj->update_inc( likes => -1 );
 
 Increments a field by a positive or negative value.  This is the MongoDB
-C<$inc> operator.  Returns true if the update is appplied and synchronized.  If
+C<$inc> operator.  Returns true if the update is applied and synchronized.  If
 the document has been removed, the method returns false and the object is
 marked as removed.
 
@@ -135,7 +134,7 @@ sub update_inc {
     $obj->update_push( tags => qw/cool hot trendy/ );
 
 Pushes values onto an array reference field. This is the MongoDB C<$push>
-operator.  Returns true if the update is appplied and synchronized.  If the
+operator.  Returns true if the update is applied and synchronized.  If the
 document has been removed, the method returns false and the object is marked as
 removed.
 
@@ -154,7 +153,7 @@ sub update_push {
 
 Pushs values onto an array reference field, but only if they do not already
 exist in the array.  This is the MongoDB C<$addToSet> operator.  Returns true
-if the update is appplied and synchronized.  If the document has been removed,
+if the update is applied and synchronized.  If the document has been removed,
 the method returns false and the object is marked as removed.
 
 
@@ -171,7 +170,7 @@ sub update_add {
     $obj->update_pop( 'tags' );
 
 Removes a value from the end of the array.  This is the MongoDB C<$pop>
-operator with a direction of "1".  Returns true if the update is appplied and
+operator with a direction of "1".  Returns true if the update is applied and
 synchronized.  If the document has been removed, the method returns false and
 the object is marked as removed.
 
@@ -189,7 +188,7 @@ sub update_pop {
     $obj->update_shift( 'tags' );
 
 Removes a value from the front of the array.  This is the MongoDB C<$pop>
-operator with a direction of "-1".  Returns true if the update is appplied and
+operator with a direction of "-1".  Returns true if the update is applied and
 synchronized.  If the document has been removed, the method returns false and
 the object is marked as removed.
 
@@ -207,7 +206,7 @@ sub update_shift {
     $obj->update_remove( tags => qw/cool hot/ );
 
 Removes a list of values from the array.  This is the MongoDB C<$pullAll>
-operator.  Returns true if the update is appplied and synchronized.  If the
+operator.  Returns true if the update is applied and synchronized.  If the
 document has been removed, the method returns false and the object is marked as
 removed.
 
@@ -225,7 +224,7 @@ sub update_remove {
     $obj->update_clear( 'tags' );
 
 Clears an array field, setting it back to an empty array reference.  Returns
-true if the update is appplied and synchronized.  If the document has been
+true if the update is applied and synchronized.  If the document has been
 removed, the method returns false and the object is marked as removed.
 
 =cut
@@ -337,7 +336,7 @@ Your model class:
 
     package MyModel::Person;
 
-    use Moose 2;
+    use Moose;
 
     with 'Meerkat::Role::Document';
 
@@ -377,7 +376,7 @@ In your code:
     # change document in the database and update object
     $obj->update_set( name => "Moe" );
     $obj->update_inc( likes => 1 );
-    $obj->update_push( tags => qw/cool hot trendyy/ );
+    $obj->update_push( tags => qw/cool hot trendy/ );
 
     # get any other updates from the database
     $obj->sync;
@@ -391,9 +390,9 @@ This role enhances a Moose class with attributes and methods needed to operate
 in tandem with a L<Meerkat::Collection>.
 
 The resulting object is a projection of the document state in the database.
-Update methods change the state atomically in the database and synchronize
-the object with the new state in the database (including other changes from
-other sources).
+Update methods change the state atomically in the database and synchronize the
+object with the new state in the database (potentially including other changes
+from other sources).
 
 =head2 Consuming the role
 
@@ -401,7 +400,7 @@ When you apply this role to your Moose class, it provides and manages the
 C<_id> attribute for you.  This attribute is meant to be public, but keeps
 the leading underscore for consistency with L<MongoDB> classes.
 
-The rest of the attributes should be read-only.  Modifying attributes directly
+The attributes you define should be read-only.  Modifying attributes directly
 in the object will not be reflected in the database and will be lost the next
 time you synchronize.
 
@@ -423,7 +422,7 @@ Create objects from an associated Meerkat::Collection, not with C<new>.
 
     my $obj = $person->create( %attributes );
 
-That will construct the object, instatiate all lazy attributes (except those
+That will construct the object, instantiate all lazy attributes (except those
 marked C<DoNoSerialize>) and store the new document into the database.
 
 Then, use the various update methods to modify state if you need to.  Use

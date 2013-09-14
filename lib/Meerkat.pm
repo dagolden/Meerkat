@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 package Meerkat;
-# ABSTRACT: MongoDB documents as Moose objects
+# ABSTRACT: Manage MongoDB documents as Moose objects
 # VERSION
 
 # Dependencies
@@ -38,9 +38,9 @@ has namespace => (
 
 =attr database_name (required)
 
-A MongoDB database name used to store all collections generated via the
-Meerkat object and its collections factories.  Unless a C<db_name> is provided
-in the C<client_options> attribute, this database will be used instead for any
+A MongoDB database name used to store all collections generated via the Meerkat
+object and its collection factories.  Unless a C<db_name> is provided in the
+C<client_options> attribute, this database will be the default for
 authentication.
 
 =cut
@@ -259,9 +259,9 @@ Meerkat divides functional responsibilities across six classes:
 * L<Meerkat::DateTime> — proxies an epoch value with lazy DateTime inflation
 * L<Meerkat::Types> — provides type definition and coercion for Meerkat::DateTime
 
-You define your documents as Moose classes that consumes the Meerkat::Role::Document
-role.  This gives them several support methods to update, synchronize or remove
-themselves from the database.
+You define your documents as Moose classes that consume
+Meerkat::Role::Document.  This gives them several support methods to update,
+synchronize or remove documents from the database.
 
 In order to create objects from your model or retrieve them from the database,
 you must first create a Meerkat object that manages your connection to the
@@ -315,7 +315,7 @@ Mongoose critiques|MongoDBx::Class/COMPARISON WITH OTHER MongoDB ORMs>.
 Mongoose is about 1000 lines of code split across fourteen modules.
 
 Next I looked at L<MongoDBx::Class>.  In many ways, it works much more like the
-L<MongoDB> classes.  What stopped me cold was that it requires inserts to be
+basic L<MongoDB> classes.  What stopped me cold was that it requires inserts to be
 done with a raw data structure.  That means no defaults, validation, lazy
 building and other stuff that I like about Moose.  It does offer some support
 making updates easier, and I've adapted that approach for Meerkat.
@@ -327,9 +327,10 @@ doesn't have transactions.  MongoDB offers atomic I<document> updates, so I
 decided to focus Meerkat on that alone.
 
 Mongoose and MongoDBx also support defining embedded documents.  I haven't
-decided if that's necessary, so I haven't implemented it in Meerkat.
+decided if that's necessary — and it adds quite a bit of complexity — so I
+haven't implemented it in Meerkat.
 
-There are other MongoDB things out there that I found and dismissed:
+There are other MongoDB-based modules that I found and dismissed:
 
 =for :list
 * L<KiokuDB::Backend::MongoDB>, but see the Mongoose L<critique of it|Mongoose::Intro/MOTIVATION>
@@ -361,7 +362,7 @@ about 450 lines of code split across six modules.
 * L<Meerkat::Tutorial>
 * L<Meerkat::Cookbook>
 
-=head2 Other MongoDB resource
+=head2 Other MongoDB resources
 
 =for :list
 * L<MongoDB::MongoClient>
