@@ -174,7 +174,7 @@ documents of the associated class.
 =cut
 
 sub find {
-    state $check = compile( Object, HashRef );
+    state $check = compile( Object, Optional [HashRef] );
     my ( $self, $query ) = $check->(@_);
     my $cursor = $self->_mongo_collection->find($query);
     return Meerkat::Cursor->new( cursor => $cursor, collection => $self );
