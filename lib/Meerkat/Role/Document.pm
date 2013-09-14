@@ -363,9 +363,15 @@ Your model class:
 
 In your code:
 
+    use Meerkat;
+
+    my $meerkat = Meerkat->new(
+        namespace => "MyModel", database_name => "test"
+    );
+
+    my $person = $meerkat->collection("Person"); # MyModel::Person
+
     # create a document
-    my $meerkat = Meerkat->new( @options );
-    my $person = $meerkat->collection("Person");
     my $obj = $person->create( name => "Larry" );
 
     # change document in the database and update object

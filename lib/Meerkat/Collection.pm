@@ -39,7 +39,8 @@ has meerkat => (
 
 =attr class (required)
 
-The class name to associate with documents.
+The class name to associate with documents.  The class is loaded
+for you if needed.
 
 =cut
 
@@ -80,11 +81,18 @@ sub BUILD {
 # Public methods on collection as a whole
 #--------------------------------------------------------------------------#
 
-sub count {
-    state $check = compile( Object, Optional [HashRef] );
-    my ( $self, $query ) = $check->(@_);
-    return $self->_mongo_collection->count($query);
-}
+=method create
+
+    my $obj = $person->create( name => 'John' );
+
+Creates an object of the type associated with the Meerkat::Collection and
+inserts it into the C<collection_name> in the database.  Returns the object on
+success or throws an error on failure.
+
+Any arguments given are passed directly to the associated class constructor.
+Arguments may be given either as a list or as a hash reference.
+
+=cut
 
 sub create {
     state $check = compile( Object, slurpy ArrayRef );
@@ -95,6 +103,38 @@ sub create {
     return $obj;
 }
 
+=method count
+
+    my $count = $person->count;
+    my $count = $person->count( $query );
+
+Returns the number of documents in the C<collection_name> or throws an error on
+failure.  If a hash reference is provided, it is passed as a query parameter to
+the MongoDB L<count|MongoDB::Collection/count> method.
+
+=cut
+
+sub count {
+    state $check = compile( Object, Optional [HashRef] );
+    my ( $self, $query ) = $check->(@_);
+    return $self->_mongo_collection->count($query);
+}
+
+=method find_id
+
+    my $obj = $person->find_id( $id );
+
+Finds a document with the given C<_id> and returns it as an object of the
+associated class.  Returns undef if the C<_id> is not found or throws an error
+if one occurs.  This is a shorthand for the same query via C<find_one>:
+
+    $person->find_one( { _id => $id } );
+
+However, C<find_id> can take both a scalar C<_id> or a L<MongoDB::OID> object
+as an argument.
+
+=cut
+
 sub find_id {
     state $check = compile( Object, Defined );
     my ( $self, $id ) = $check->(@_);
@@ -103,6 +143,16 @@ sub find_id {
     return $self->thaw_object($data);
 }
 
+=method find_one
+
+    my $obj = $person->find_one( { name => "Larry Wall" } );
+
+Finds the first document matching a query parameter hash reference and returns
+it as an object of the associated class.  Returns undef if the C<_id> is not
+found or throws an error if one occurs.
+
+=cut
+
 sub find_one {
     state $check = compile( Object, HashRef );
     my ( $self, $query ) = $check->(@_);
@@ -110,12 +160,35 @@ sub find_one {
     return $self->thaw_object($data);
 }
 
+=method find
+
+    my $cursor = $person->find( { tag => "trendy" } );
+    my @objs   = $cursor->all;
+
+Executes a query against C<collection_name>.  It returns a L<Meerkat::Cursor>
+or throws an error on failure.  If a hash reference is provided, it is passed
+as a query parameter to the MongoDB L<count|MongoDB::Collection/find> method,
+otherwise all documents are returned.  Iterating the cursor will return
+documents of the associated class.
+
+=cut
+
 sub find {
     state $check = compile( Object, HashRef );
     my ( $self, $query ) = $check->(@_);
     my $cursor = $self->_mongo_collection->find($query);
     return Meerkat::Cursor->new( cursor => $cursor, collection => $self );
 }
+
+=method ensure_indexes
+
+    $person->ensure_indexes;
+
+Executes MongoDB's L<ensure_index|MongoDB::Collection/ensure_index> for
+every index returned by the C<_index> method of the associated class.
+Returns true on success or throws an error if one occurs.
+
+=cut
 
 sub ensure_indexes {
     state $check = compile(Object);
@@ -131,7 +204,7 @@ sub ensure_indexes {
 }
 
 #--------------------------------------------------------------------------#
-# Public methods on individual objects; typically called by object to
+# Semi-private methods on individual objects; typically called by object to
 # modify itself and synchronize with the database
 #--------------------------------------------------------------------------#
 
@@ -185,10 +258,6 @@ sub update {
     }
 }
 
-#--------------------------------------------------------------------------#
-# Semi-private methods
-#--------------------------------------------------------------------------#
-
 sub thaw_object {
     state $check = compile( Object, HashRef );
     my ( $self, $data ) = $check->(@_);
@@ -236,7 +305,7 @@ __PACKAGE__->meta->make_immutable;
 
 1;
 
-=for Pod::Coverage BUILD
+=for Pod::Coverage BUILD remove reinsert sync update thaw_object
 
 =head1 SYNOPSIS
 
@@ -246,20 +315,16 @@ __PACKAGE__->meta->make_immutable;
         namespace => "MyModel", database_name => "test"
     );
 
-    my $coll = $meerkat->collection("Person"); # MyModel::Person
+    my $person = $meerkat->collection("Person"); # MyModel::Person
 
     # create an object and insert it into the MongoDB collection
-    my $obj = $coll->create( name => 'John' );
-
-    # modify an object atomically
-    $obj->update_inc ({ likes => 1               }); # increment a counter
-    $obj->update_push({ tags => [qw/hot trendy/] }); # push to an array
+    my $obj = $person->create( name => 'John' );
 
     # find a single object
-    my $copy = $coll->find_one( { name => 'John' } );
+    my $copy = $person->find_one( { name => 'John' } );
 
     # get a Meerkat::Cursor for multiple objects
-    my $cursor = $coll->find( $query_hashref );
+    my $cursor = $person->find( { tag =>  );
 
 =head1 DESCRIPTION
 

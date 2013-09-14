@@ -142,12 +142,12 @@ sub _build__collection_cache {
         },
     );
 
-Generates and returns a new Meerkat option.  The C<namespace> and
+Generates and returns a new Meerkat object.  The C<namespace> and
 C<database_name> attributes are required.
 
 =method collection
 
-    my $coll = $meerkat->collection("Person"); # MyModel::Person
+    my $person = $meerkat->collection("Person"); # MyModel::Person
 
 Returns a L<Meerkat::Collection> factory object.  A single parameter
 is required and is used as the suffix of a class name provided to
@@ -211,20 +211,20 @@ __PACKAGE__->meta->make_immutable;
         },
     );
 
-    my $coll = $meerkat->collection("Person"); # MyModel::Person
+    my $person = $meerkat->collection("Person"); # MyModel::Person
 
     # create an object and insert it into the MongoDB collection
-    my $obj = $coll->create( name => 'John' );
+    my $obj = $person->create( name => 'John' );
 
     # modify an object atomically
-    $obj->update_inc ({ likes => 1               }); # increment a counter
-    $obj->update_push({ tags => [qw/hot trendy/] }); # push to an array
+    $obj->update_inc ( likes => 1               ); # increment a counter
+    $obj->update_push( tags => [qw/hot trendy/] ); # push to an array
 
     # find a single object
-    my $copy = $coll->find_one( { name => 'John' } );
+    my $copy = $person->find_one( { name => 'John' } );
 
     # get a Meerkat::Cursor for multiple objects
-    my $cursor = $coll->find( $query_hashref );
+    my $cursor = $person->find( { tags => 'hot' } );
 
 =head1 DESCRIPTION
 

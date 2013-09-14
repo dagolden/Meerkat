@@ -29,7 +29,7 @@ has epoch => (
 
 =attr DateTime
 
-A lazily-inflated DateTime object.  It is not serialized or stored.
+A lazily-inflated DateTime object.  It will not be serialized by MooseX::Storage.
 
 =cut
 
@@ -60,15 +60,15 @@ __PACKAGE__->meta->make_immutable;
 
 =head1 DESCRIPTION
 
-This module provides a way to lazily inflate floating point
-epoch seconds into a DateTime object.  It's conceptually similar
-to DateTime::Tiny, but without all the year, month, day, etc. fields.
+This module provides a way to lazily inflate floating point epoch seconds into
+a L<DateTime object>.  It's conceptually similar to L<DateTime::Tiny>, but
+without all the year, month, day, etc. fields.
 
 The L<Meerkat::Types> module provides Moose type support and coercions and
-L<MooseX::Storage> type handling to simplify having a Meerkat::DateTime
-attribute.
+L<MooseX::Storage> type handling to simplify having Meerkat::DateTime
+attributes.
 
-See the L<Merkat::Cookbook> for more on handling dates and times.
+See the L<Meerkat::Cookbook> for more on handling dates and times.
 
 =cut
 
