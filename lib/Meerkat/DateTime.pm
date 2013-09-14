@@ -41,7 +41,7 @@ has DateTime => (
 
 sub _build_DateTime {
     my ($self) = @_;
-    return DateTime->from_epoch( $self->epoch );
+    return DateTime->from_epoch( epoch => $self->epoch );
 }
 
 __PACKAGE__->meta->make_immutable;

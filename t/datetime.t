@@ -24,6 +24,7 @@ test 'set epoch' => sub {
     my $now  = time - 40 * 365.25 * 24 * 3600; # about 40 years ago
     $obj->update_set( birthday => $now );
     is( $obj->birthday->epoch, $now, "attribute set" );
+    isa_ok( $obj->birthday->DateTime, 'DateTime', "inflation" );
 };
 
 test 'set DateTime' => sub {
