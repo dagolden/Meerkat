@@ -21,7 +21,7 @@ and C<tags>:
 
     package MyModel::Person;
 
-    use Moose 2;
+    use Moose;
 
     with 'Meerkat::Role::Document';
 
@@ -99,25 +99,71 @@ in sync.  B<Always create objects from a Meerkat::Collection>.
 
 =head2 Updating, Synchronizing and Removing Documents
 
+With Meerkat, objects reflect the state of a document in the database at moment
+in time.  Therefore, you never change the state of your object directly,
+because it might no longer reflect the true state of the document in the
+database.  Instead, you issue database commands to modify the document
+atomically in the database and then synchronize your object with the result.
 
-    # modify an object atomically
+Conveniently, Meerkat::Role::Document gives your model class some methods to
+make that easy:
+
     $obj->update_set ( name  => "Warry Lall"   ); # change a field
     $obj->update_inc ( likes => 1              ); # increment a counter
     $obj->update_push( tags  => qw/hot trendy/ ); # push to an array
 
+If you aren't changing data, but want to update your object's snapshot of the
+document in the database, call the C<sync> method:
+
     $obj->sync
+
+And should you need to get rid of a document, the C<remove> method will take
+care of it.
 
     $obj->remove
 
+Afterwards, C<is_removed> will be true and C<update> and C<sync> calls will
+do nothing and return a false value.
+
+=head2 Errors
+
+Generally, Meerkat methods return true if they executed successfully and false
+if they could not.
+
+For example, if a document was removed in the database by another process and
+an C<update> or C<sync> is called, it will return false.  (It will flag the
+object as having been removed from the database, but will not otherwise modify
+its data.)
+
+Should any major error occur, an exception will get thrown.
 
 =head2 Searching the Database
 
-    # find a single object
-    my $copy = $person->find_one( { name => 'John' } );
+To retrieve a document from the database, the collection provides search
+methods similar to L<MongoDB::Collection>, but which return objects from
+your model class.
 
-    # get a Meerkat::Cursor for multiple objects
+For single objects, there are the C<find_id> and C<find_one> methods:
+
+    # find a single object
+    my $obj1 = $person->find_id( $id );
+    my $obj2 = $person->find_one( { name => 'John' } );
+
+If you have a L<MongoDB
+query|http://docs.mongodb.org/manual/tutorial/query-documents/> for multiple
+objects, you pass it to C<find> and get a L<Meerkat::Cursor> object back.  It
+proxies for L<MongoDB::Cursor> but returns objects when iterated.
+
     my $cursor = $person->find( $query_hashref );
 
+    while ( my $obj = $cursor->next ) { ... }
+
+=head2 Next steps
+
+Try out the example class above using the 'test' database on your
+machine.
+
+Afterwards, check out the L<Meerkat::Cookbook> for more advice.
 
 =cut
 
