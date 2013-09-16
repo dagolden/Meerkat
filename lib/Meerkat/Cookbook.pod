@@ -1,46 +1,146 @@
 # PODNAME: Meerkat::Cookbook
-# ABSTRACT: Meerkat examples with dos and don'ts
+# ABSTRACT: Meerkat recipes with dos and don'ts
 
 =head1 COOKBOOK
 
-=head2 Date objects
-
-Do you really need this?  MongoDB has support for inflating and deflating
-L<DateTime> and L<DateTime:Tiny> objects, but do you really need the
-overhead of doing so each time?
-
-I suggest configuring MongoDB with C<< dt_type => undef >> and storing
-epoch seconds in the database.  You can still C<update_set> a DateTime
-or DateTime::Tiny object and MongoDB will convert it to epoch seconds
-for you.
-
-If you want a DateTime object, consider inflating it it on demand.  (How?)
-
-[talk about support for DateTime and DateTime::Tiny but not when
-defined via InstanceOf[...], etc.]
-
-[suggest translation to epoch values anyway]
-
-=head2 Embedded objects
-
-Again, do you really want this?  If your objects are read-only, it might
-be OK, but if not, you'll be tempted to modify the data in the embedded
-object will then be out of sync with the database and you're screwed.
-
-If the object is read-only, and does the MooseX::Storage role, then
-it will be packed into the database on creation.  But if you update it,
-you have to pack the replacement object yourself.
-
-    $obj->update_set( 'embedded' => $new_embedded->pack );
-
 =head2 Preventing attributes from being serialized
 
-If you have private attributes that should not be serialized...
+If you have private attributes that should not be serialized — particularly
+lazy ones that can be reconstructed on demand — add the C<DoNotSerialize>
+trait from L<MooseX::Storage>:
 
-[DoNotSerialize] -- good for lazy things in particular
+    use MooseX::AttributeShortcuts; # 'lazy'
+    use MooseX::Storage;
+
+    has big_object => (
+        is => 'lazy',
+        isa => 'Heavy::Object',
+        traits => ['DoNotSerialize'],
+    );
+
+    sub _build_big_object { ... }
+
+=head2 Date objects
+
+Do you really need them in your model?  MongoDB does have support for inflating
+and deflating L<DateTime> and L<DateTime:Tiny> objects, but do you really want
+the overhead of doing so each time?
+
+The simplest and sanest thing to do, in my opinion, is to keep your times in
+either epoch seconds or some standardized format like ISO 8601, inflate them
+when you need to work with them, and store any changes to them in the same
+format.
+
+    use MooseX::Types::ISO8601 qw/ISO8601Date/
+
+    has birthday => (
+        is => 'ro',
+        isa => ISO8601Date,
+        coerce => 1,
+    );
+
+If you try to store DateTime or DateTime::Tiny objects directly, the MongoDB
+client will translate them to its internal datetime format.  Meerkat sets the
+MongoDB C<dt_type> option to C<undef>, so the MongoDB client will always return
+epoch seconds for its internal datetime type.  With Meerkat, objects go in, but
+numbers come back out.
+
+However, if you aren't consistent about how you store datetimes, you run
+the risk of getting mixed numbers and internal datetime types in your
+documents and that's probably a bad idea.  Either store as epoch seconds or
+or a standard format or store objects, but don't mix them up.
+
+To make things a little easier at the cost of some complexity, Meerkat offers
+L<Meerkat::DateTime> and the C<MeerkatDateTime> type.
+
+    use Meerkat::Types qw/MeerkatDateTime/;
+
+    has birthday => (
+        is => 'ro',
+        isa => MeerkatDateTime,
+        coerce => 1,
+    );
+
+For an attribute of type C<MeerkatDateTime>, initializing it with epoch
+seconds, a DateTime object or a DateTime::Tiny object will coerce into a
+Meerkat::DateTime object.
+
+    $person->create( name => "Joe", birthday => $when );
+    # birthday is coerced from $when to a Meerkat::DateTime object
+
+This object holds epoch seconds and will lazily inflate a DateTime object for
+you on demand:
+
+    my $dt = $obj->birthday->DateTime;
+
+Again, because MongoDB will store a DateTime or DateTime::Tiny object with its
+internal format, you can then update fields using objects of those types and
+MongoDB will convert them to an internal type when storing, return them as
+epoch seconds, which then get coerced back into a Meerkat::DateTime object when
+the update is synchronized:
+
+    $obj->update_set( birthday => $new_datetime_obj );
+    # birthday winds up an updated Meerkat::DateTime object.
+
+This is all a little convoluted but might save a little coding.
+
+Ultimately, if you want a consistent database field type, your options are
+pretty straightforward:
+
+=for :list
+* Option 1: store only epoch seconds or other standard format and inflate them to DateTime yourself
+* Option 2: store only epoch seconds and let the attribute coerce to Meerkat::DateTime objects
+* Option 3: store only DateTime(::Tiny) objects and let the attribute coerce them to a Meerkat::DateTime objects
+
+What you B<don't> want to do is mix storing DateTime objects and raw epoch
+seconds or any other format.
+
+Note that Meerkat::DateTime objects only work when your data structure has a
+C<MeerkatDateTime> type constraint on it.  You can't just store
+Meerkat::DateTime objects into any random field or data structure and expect
+things to work.
+
+=head2 Embedded objects not really supported
+
+Meerkat offers no real support for embedded objects.
+
+Again, do you really want this?  If your objects are read-only, it might be OK,
+but if not, you'll be tempted to modify the data in the embedded object and
+then it will be out of sync with the database and you're screwed.
+
+If you really want to experiment with this, if an embedded object does the
+MooseX::Storage role, then it will be packed into the database on object
+creation as a hash reference following the MooseX::Storage format.
+
+But if you update the field, you probably have to pack the replacement object
+yourself.
+
+    $obj->update_set( embedded => $new_embedded->pack );
+
+This has not been tested and is all theoretical.  Consider yourself suitably
+warned.
 
 =head2 Handling deserialization errors
 
-[can force a reinsertion; or can remove it; or can fix manually in the DB]
+If for any reason, a document in the database contains data that can't be
+validated against attribute type and BUILD constraints, Meerkat will throw an
+exception.
+
+This shouldn't happen during C<create> because the data has just been validated
+and is being inserted, but it could happen during either C<update> or C<sync>
+if the document in the database (possibly post-update) fails validation.
+
+If you catch the exception, your object will not have been modified by the
+changes in the database and thus, by definition, contains a valid document.
+
+One rather crude attempt to fix it would be to force a C<reinsert>.  However,
+this is destructive so use with extreme caution.  You probably want to find out
+I<why> the document got corrupted and fix that rather than just jamming the
+document back in and hoping for the best.
+
+=head1 OTHER QUESTIONS?
+
+If you have other ideas or questions for the cookbook, please contact the
+author.
 
 =cut
