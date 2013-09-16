@@ -29,6 +29,27 @@ test 'bad sync' => sub {
     cmp_deeply( $obj, $copy, "object is unchanged" );
 };
 
+test 'array ops on non array field' => sub {
+    my $self = shift;
+    my $obj  = $self->create_person;
+
+    my %got;
+    $got{'push'} = exception { $obj->update_push( 'name', qw/foo bar/ ) };
+    $got{'add'}    = exception { $obj->update_add( 'name', qw/foo bar/ ) };
+    $got{'pop'}    = exception { $obj->update_pop('name') };
+    $got{'shift'}  = exception { $obj->update_shift('name') };
+    $got{'remove'} = exception { $obj->update_remove( 'name', qw/foo bar/ ) };
+    $got{'clear'}  = exception { $obj->update_clear('name') };
+
+    for my $op ( sort keys %got ) {
+        like(
+            $got{$op},
+            qr/Can't use update_$op on a non-arrayref field/,
+            "update_$op on non-arrayref field exception"
+        );
+    }
+};
+
 run_me;
 done_testing;
 # COPYRIGHT

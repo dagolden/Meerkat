@@ -242,14 +242,20 @@ sub sync {
 sub update {
     state $check = compile( Object, Object, HashRef );
     my ( $self, $obj, $update ) = $check->(@_);
-    my $data = $self->_mongo_collection->find_and_modify(
-        {
-            query  => { _id => $obj->_id },
-            update => $update,
-            new    => 1,
-        }
-    );
-    if ($data) {
+    my $data = try {
+        $self->_mongo_collection->find_and_modify(
+            {
+                query  => { _id => $obj->_id },
+                update => $update,
+                new    => 1,
+            }
+        );
+    }
+    catch {
+        $self->_croak("Update failed: $_");
+    };
+
+    if ( ref $data ) {
         $self->_sync( $data => $obj );
         return 1;
     }
@@ -292,14 +298,20 @@ sub _sync {
         $self->thaw_object($data);
     }
     catch {
-        s/ at \S+ line \d+.*//ms;
-        croak "Could not inflate updated document with _id=$data->{_id} because: $_";
+        $self->_croak(
+            "Could not inflate updated document with _id=$data->{_id} because: $_");
     };
     for my $tgt_attr ( $tgt->meta->get_all_attributes ) {
         my $src_attr = $src->meta->find_attribute_by_name( $tgt_attr->name );
         $tgt_attr->set_value( $tgt, $src_attr->get_value($src) );
     }
     return 1;
+}
+
+sub _croak {
+    my ( $self, $msg ) = @_;
+    $msg =~ s/ at \S+ line \d+.*//ms;
+    croak $msg;
 }
 
 __PACKAGE__->meta->make_immutable;
