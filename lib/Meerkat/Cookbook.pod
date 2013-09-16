@@ -47,7 +47,7 @@ numbers come back out.
 
 However, if you aren't consistent about how you store datetimes, you run
 the risk of getting mixed numbers and internal datetime types in your
-documents and that's probably a bad idea.  Either store as epoch seconds or
+documents and that's probably a bad idea.  Either store as epoch seconds
 or a standard format or store objects, but don't mix them up.
 
 To make things a little easier at the cost of some complexity, Meerkat offers
@@ -75,7 +75,7 @@ you on demand:
 
 Again, because MongoDB will store a DateTime or DateTime::Tiny object with its
 internal format, you can then update fields using objects of those types and
-MongoDB will convert them to an internal type when storing, return them as
+MongoDB will convert them to an internal type when storing and return them as
 epoch seconds, which then get coerced back into a Meerkat::DateTime object when
 the update is synchronized:
 
@@ -84,21 +84,21 @@ the update is synchronized:
 
 This is all a little convoluted but might save a little coding.
 
-Ultimately, if you want a consistent database field type, your options are
-pretty straightforward:
+Ultimately, if you want a consistent datetime field type in the database,
+your options are pretty straightforward:
 
 =for :list
 * Option 1: store only epoch seconds or other standard format and inflate them to DateTime yourself
 * Option 2: store only epoch seconds and let the attribute coerce to Meerkat::DateTime objects
-* Option 3: store only DateTime(::Tiny) objects and let the attribute coerce them to a Meerkat::DateTime objects
+* Option 3: store only DateTime(::Tiny) objects and let the attribute coerce them to Meerkat::DateTime objects
 
 What you B<don't> want to do is mix storing DateTime objects and raw epoch
 seconds or any other format.
 
-Note that Meerkat::DateTime objects only work when your data structure has a
+Note that Meerkat::DateTime objects only work when your attribute has a
 C<MeerkatDateTime> type constraint on it.  You can't just store
-Meerkat::DateTime objects into any random field or data structure and expect
-things to work.
+Meerkat::DateTime objects into any random field or deep data structure and
+expect things to work.
 
 =head2 Embedded objects not really supported
 
@@ -112,7 +112,7 @@ If you really want to experiment with this, if an embedded object does the
 MooseX::Storage role, then it will be packed into the database on object
 creation as a hash reference following the MooseX::Storage format.
 
-But if you update the field, you probably have to pack the replacement object
+But if you update the field, you have to pack the replacement object
 yourself.
 
     $obj->update_set( embedded => $new_embedded->pack );
@@ -126,9 +126,10 @@ If for any reason, a document in the database contains data that can't be
 validated against attribute type and BUILD constraints, Meerkat will throw an
 exception.
 
-This shouldn't happen during C<create> because the data has just been validated
-and is being inserted, but it could happen during either C<update> or C<sync>
-if the document in the database (possibly post-update) fails validation.
+This won't happen during C<create> because the new object has just been
+validated and is being newly inserted, but it could happen during either
+C<update> or C<sync> if the document in the database (possibly post-update)
+fails validation.
 
 If you catch the exception, your object will not have been modified by the
 changes in the database and thus, by definition, contains a valid document.

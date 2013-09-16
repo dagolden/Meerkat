@@ -151,7 +151,7 @@ sub update_push {
 
     $obj->update_add( tags => qw/cool hot trendy/ );
 
-Pushs values onto an array reference field, but only if they do not already
+Pushes values onto an array reference field, but only if they do not already
 exist in the array.  This is the MongoDB C<$addToSet> operator.  Returns true
 if the update is applied and synchronized.  If the document has been removed,
 the method returns false and the object is marked as removed.
