@@ -12,6 +12,7 @@ use MooseX::Storage;
 use MooseX::Storage::Engine;
 
 use Carp qw/croak/;
+use Syntax::Keyword::Junction qw/any/;
 use MongoDB::OID;
 use Type::Params qw/compile/;
 use Types::Standard qw/slurpy :types/;
@@ -107,6 +108,7 @@ the method returns false and the object is marked as removed.
 sub update_set {
     state $check = compile( Object, Defined, Defined );
     my ( $self, $field, $value ) = $check->(@_);
+    $self->__check_op( $field, any(qw/undef scalar/) );
     return $self->update( { '$set' => { "$field" => $value } } );
 }
 
@@ -144,6 +146,7 @@ removed.
 sub update_push {
     state $check = compile( Object, Defined, slurpy ArrayRef );
     my ( $self, $field, $list ) = $check->(@_);
+    $self->__check_op( $field, any(qw/undef ARRAY/) );
     $self->_check_arrayref( update_push => $field );
     return $self->update( { '$push' => { "$field" => { '$each' => $list } } } );
 }
@@ -163,7 +166,7 @@ the method returns false and the object is marked as removed.
 sub update_add {
     state $check = compile( Object, Defined, slurpy ArrayRef );
     my ( $self, $field, $list ) = $check->(@_);
-    $self->_check_arrayref( update_add => $field );
+    $self->__check_op( $field, any(qw/undef ARRAY/) );
     return $self->update( { '$addToSet' => { "$field" => { '$each' => $list } } } );
 }
 
@@ -182,7 +185,7 @@ the object is marked as removed.
 sub update_pop {
     state $check = compile( Object, Defined );
     my ( $self, $field ) = $check->(@_);
-    $self->_check_arrayref( update_pop => $field );
+    $self->__check_op( $field, 'ARRAY' );
     return $self->update( { '$pop' => { "$field" => 1 } } );
 }
 
@@ -201,7 +204,7 @@ the object is marked as removed.
 sub update_shift {
     state $check = compile( Object, Defined );
     my ( $self, $field ) = $check->(@_);
-    $self->_check_arrayref( update_shift => $field );
+    $self->__check_op( $field, 'ARRAY' );
     return $self->update( { '$pop' => { "$field" => -1 } } );
 }
 
@@ -220,7 +223,7 @@ removed.
 sub update_remove {
     state $check = compile( Object, Defined, slurpy ArrayRef );
     my ( $self, $field, $list ) = $check->(@_);
-    $self->_check_arrayref( update_remove => $field );
+    $self->__check_op( $field, 'ARRAY' );
     return $self->update( { '$pullAll' => { "$field" => $list } } );
 }
 
@@ -237,7 +240,7 @@ removed, the method returns false and the object is marked as removed.
 sub update_clear {
     state $check = compile( Object, Defined );
     my ( $self, $field ) = $check->(@_);
-    $self->_check_arrayref( update_clear => $field );
+    $self->__check_op( $field, 'ARRAY' );
     return $self->update( { '$set' => { "$field" => [] } } );
 }
 
@@ -300,6 +303,10 @@ sub reinsert {
     return if !$self->is_removed and !$options->{force}; # NOP
     return $self->_collection->reinsert($self);
 }
+
+#--------------------------------------------------------------------------#
+# semi private methods
+#--------------------------------------------------------------------------#
 
 =method _indexes
 
@@ -371,6 +378,26 @@ sub _deep_field {
         $head .= ".$p";
     }
     return $target;
+}
+
+#--------------------------------------------------------------------------#
+# really private methods
+#--------------------------------------------------------------------------#
+
+sub __check_op {
+    my ( $self, $field, $allowed ) = @_; # $allowed could be a junction
+    my $value = $self->_deep_field($field);
+    my $ref   = ref $value;
+    my $type  = $ref ? $ref : defined $value ? 'scalar' : 'undef';
+    unless ( $type eq $allowed ) {
+        my ( undef, undef, undef, $sub ) = caller(1);
+        $sub =~ s/.*::(\w+)$/$1/;
+        croak "Can't use $sub on $type field '$field'";
+    }
+}
+
+sub __field_type {
+    my $value = shift;
 }
 
 1;

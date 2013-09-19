@@ -44,7 +44,7 @@ test 'array ops on non array field' => sub {
     for my $op ( sort keys %got ) {
         like(
             $got{$op},
-            qr/Can't use update_$op on non-arrayref field 'name'/,
+            qr/Can't use update_$op on scalar field 'name'/,
             "update_$op on non-arrayref field exception"
         );
     }
@@ -54,13 +54,31 @@ test 'array ops on deep non array field' => sub {
     my $self = shift;
     my $obj  = $self->create_person;
 
-    my $got = exception { $obj->update_push( 'parents.birth', qw/foo bar/ ) };
+    $obj->update_set( 'parents.father' => "Joe" );
+    my $got = exception { $obj->update_push( 'parents.father', qw/foo bar/ ) };
 
     like(
         $got,
-        qr/Can't use update_push on non-arrayref field 'parents\.birth'/,
+        qr/Can't use update_push on scalar field 'parents\.father'/,
         "update_push on deep non-arrayref field exception"
     );
+};
+
+test 'update_set reference to alternate type' => sub {
+    my $self = shift;
+    my $obj  = $self->create_person;
+
+    my %got;
+    $got{scalar} = exception { $obj->update_set( 'tags', 'foo' ) };
+    $got{hashref} = exception { $obj->update_set( 'tags', {} ) };
+
+    for my $g ( keys %got ) {
+        like(
+            $got{$g},
+            qr/Can't use update_set on ARRAY field 'tags'/,
+            "update_set $g on arrayref field exception"
+        );
+    }
 };
 
 run_me;
