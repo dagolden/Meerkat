@@ -104,7 +104,7 @@ sub update {
 Sets a field to a value.  This is the MongoDB C<$set> operator.
 
 The field must be undefined or else the existing value and the new value must
-be of similar types (e.g. array or hash reference).  For the purpose of this
+be of similar types (e.g. scalar or array or hash).  For the purpose of this
 check, an object (e.g. a DateTime) is treated (opaquely) as a scalar value.  If
 the types do not match, an error will be thrown.
 
@@ -372,15 +372,15 @@ sub _indexes { return }
 
 =method _deep_field
 
-    my $value = $obj->_deep_field( "parent.father" );
-    my $value = $obj->_deep_field( "tags.0" );
+    my $value = $obj->_deep_field( "parents.father" ); # hash key
+    my $value = $obj->_deep_field( "tags.0" );         # array index
 
 Retrieves a field deep in the object's data structure using MongoDB's dot
 notation.  Returns undef if the field does not exist.  Throws an error if the
 dot notation would do an illegal dereference.
 
 This is far less efficient than accessing an attribute and dereferencing
-directly.  It is used internally for validation of update_* fields.
+directly.  It is used internally for validation of update_* field arguments.
 
 =cut
 
