@@ -29,7 +29,7 @@ test 'deep_field lookup' => sub {
     is( $obj->_deep_field('payload.deep'), undef, "empty attribute with deep field" );
 
     # scalar attribute
-    $obj->update_set( payload => 'foo' );
+    $obj->update( { '$set' => { payload => 'foo' } } );
     is( $obj->_deep_field('payload'), 'foo', "scalar attribute" );
     like(
         exception { $obj->_deep_field("payload.bar") },
@@ -38,7 +38,7 @@ test 'deep_field lookup' => sub {
     );
 
     # array attribute
-    $obj->update_set( payload => [] );
+    $obj->update( { '$set' => { payload => [] } } );
     is( ref $obj->_deep_field('payload'), 'ARRAY', "array attribute" );
     is( $obj->_deep_field('payload.0'),   undef,   "array attribute, index 0" );
     ok( $obj->update_push( payload => 'foo' ), "pushed a value" );
@@ -57,7 +57,7 @@ test 'deep_field lookup' => sub {
     );
 
     # hash attribute
-    $obj->update_set( payload => {} );
+    $obj->update( { '$set' => { payload => {} } } );
     is( ref $obj->_deep_field('payload'), 'HASH', "hash attribute" );
     is( $obj->_deep_field('payload.bar'), undef,  "hash attribute, key" );
     ok( !exists $obj->payload->{bar}, "hash value still doesn't exist" );

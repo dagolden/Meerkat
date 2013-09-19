@@ -5,6 +5,7 @@ use warnings;
 package TestFixtures;
 
 use Test::Roo::Role;
+use Test::Fatal;
 use MooX::Types::MooseLike::Base qw/:all/;
 use Meerkat;
 use Data::Faker qw/Name DateTime/;
@@ -75,6 +76,23 @@ sub create_person {
         birthday => $self->faker->unixtime,
         @args
     );
+}
+
+sub fail_update {
+    my ( $self, $op, $obj, $field, $value ) = @_;
+    my $type = $obj->__field_type($field);
+    like(
+        exception { $obj->$op( $field, defined($value) ? $value : () ) },
+        qr/Can't use $op on $type field '$field'/,
+        "$op on $type field croaks"
+    );
+}
+
+sub pass_update {
+    my ( $self, $op, $obj, $field, $value ) = @_;
+    my $type = $obj->__field_type($field);
+    is( exception { $obj->$op( $field, defined($value) ? $value : () ) },
+        undef, "$op on $type field succeeds" );
 }
 
 1;

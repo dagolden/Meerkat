@@ -108,7 +108,7 @@ the method returns false and the object is marked as removed.
 sub update_set {
     state $check = compile( Object, Defined, Defined );
     my ( $self, $field, $value ) = $check->(@_);
-    $self->__check_op( $field, any(qw/undef scalar/) );
+    $self->__check_op( $field, any(qw/undef scalar Meerkat::DateTime/) );
     return $self->update( { '$set' => { "$field" => $value } } );
 }
 
@@ -147,7 +147,6 @@ sub update_push {
     state $check = compile( Object, Defined, slurpy ArrayRef );
     my ( $self, $field, $list ) = $check->(@_);
     $self->__check_op( $field, any(qw/undef ARRAY/) );
-    $self->_check_arrayref( update_push => $field );
     return $self->update( { '$push' => { "$field" => { '$each' => $list } } } );
 }
 
@@ -185,7 +184,7 @@ the object is marked as removed.
 sub update_pop {
     state $check = compile( Object, Defined );
     my ( $self, $field ) = $check->(@_);
-    $self->__check_op( $field, 'ARRAY' );
+    $self->__check_op( $field, any(qw/undef ARRAY/) );
     return $self->update( { '$pop' => { "$field" => 1 } } );
 }
 
@@ -204,7 +203,7 @@ the object is marked as removed.
 sub update_shift {
     state $check = compile( Object, Defined );
     my ( $self, $field ) = $check->(@_);
-    $self->__check_op( $field, 'ARRAY' );
+    $self->__check_op( $field, any(qw/undef ARRAY/) );
     return $self->update( { '$pop' => { "$field" => -1 } } );
 }
 
@@ -223,7 +222,7 @@ removed.
 sub update_remove {
     state $check = compile( Object, Defined, slurpy ArrayRef );
     my ( $self, $field, $list ) = $check->(@_);
-    $self->__check_op( $field, 'ARRAY' );
+    $self->__check_op( $field, any(qw/undef ARRAY/) );
     return $self->update( { '$pullAll' => { "$field" => $list } } );
 }
 
@@ -231,17 +230,29 @@ sub update_remove {
 
     $obj->update_clear( 'tags' );
 
-Clears an array field, setting it back to an empty array reference.  Returns
+Removes a scalar field from a document (the MongoDB C<$unset> operator) or
+empties a hash or array field (doing a C<$set> to an empty reference).  Returns
 true if the update is applied and synchronized.  If the document has been
 removed, the method returns false and the object is marked as removed.
+
+Be sure not to clear any required fields.
 
 =cut
 
 sub update_clear {
     state $check = compile( Object, Defined );
     my ( $self, $field ) = $check->(@_);
-    $self->__check_op( $field, 'ARRAY' );
-    return $self->update( { '$set' => { "$field" => [] } } );
+    $self->__check_op( $field, any(qw/undef scalar ARRAY HASH/) );
+    my $type = $self->__field_type($field);
+    if ( $type eq 'HASH' ) {
+        return $self->update( { '$set' => { "$field" => {} } } );
+    }
+    elsif ( $type eq 'ARRAY' ) {
+        return $self->update( { '$set' => { "$field" => [] } } );
+    }
+    else {
+        return $self->update( { '$unset' => { "$field" => undef } } );
+    }
 }
 
 =method sync
@@ -386,9 +397,7 @@ sub _deep_field {
 
 sub __check_op {
     my ( $self, $field, $allowed ) = @_; # $allowed could be a junction
-    my $value = $self->_deep_field($field);
-    my $ref   = ref $value;
-    my $type  = $ref ? $ref : defined $value ? 'scalar' : 'undef';
+    my $type = $self->__field_type($field);
     unless ( $type eq $allowed ) {
         my ( undef, undef, undef, $sub ) = caller(1);
         $sub =~ s/.*::(\w+)$/$1/;
@@ -397,7 +406,10 @@ sub __check_op {
 }
 
 sub __field_type {
-    my $value = shift;
+    my ( $self, $field ) = @_;
+    my $value = $self->_deep_field($field);
+    my $ref   = ref $value;
+    return $ref ? $ref : defined($value) ? 'scalar' : 'undef';
 }
 
 1;

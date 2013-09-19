@@ -29,55 +29,89 @@ test 'bad sync' => sub {
     cmp_deeply( $obj, $copy, "object is unchanged" );
 };
 
-test 'array ops on non array field' => sub {
+test 'update_set must be on scalar or undef' => sub {
     my $self = shift;
     my $obj  = $self->create_person;
 
-    my %got;
-    $got{'push'} = exception { $obj->update_push( 'name', qw/foo bar/ ) };
-    $got{'add'}    = exception { $obj->update_add( 'name', qw/foo bar/ ) };
-    $got{'pop'}    = exception { $obj->update_pop('name') };
-    $got{'shift'}  = exception { $obj->update_shift('name') };
-    $got{'remove'} = exception { $obj->update_remove( 'name', qw/foo bar/ ) };
-    $got{'clear'}  = exception { $obj->update_clear('name') };
+    # payload starts undef
+    $self->pass_update( update_set => $obj, payload => 'foo' );
+    # then payload has a scalar value
+    $self->pass_update( update_set => $obj, payload => 'bar' );
 
-    for my $op ( sort keys %got ) {
-        like(
-            $got{$op},
-            qr/Can't use update_$op on scalar field 'name'/,
-            "update_$op on non-arrayref field exception"
-        );
+    $self->fail_update( update_set => $obj, tags    => 'foo' );
+    $self->fail_update( update_set => $obj, parents => 'foo' );
+};
+
+test 'update_push/add must be on undef or ARRAY' => sub {
+    my $self = shift;
+
+    for my $op (qw/update_push update_add/) {
+        my $obj = $self->create_person;
+        # payload starts undef
+        $self->pass_update( $op => $obj, payload => 'foo' );
+        # then payload has a ARRAY
+        $self->pass_update( $op => $obj, payload => 'bar' );
+
+        # name is scalar
+        $self->fail_update( $op => $obj, name => 'foo' );
+        # parents is hash
+        $self->fail_update( $op => $obj, parents => 'foo' );
     }
 };
 
-test 'array ops on deep non array field' => sub {
+test 'update_pop/shift must be on undef or ARRAY' => sub {
     my $self = shift;
-    my $obj  = $self->create_person;
 
-    $obj->update_set( 'parents.father' => "Joe" );
-    my $got = exception { $obj->update_push( 'parents.father', qw/foo bar/ ) };
+    for my $op (qw/update_pop update_shift /) {
+        my $obj = $self->create_person;
+        # payload starts undef
+        $self->pass_update( $op => $obj, 'payload' );
+        # then push on a value
+        $obj->update_push( payload => 'foo' );
+        # then payload has a ARRAY
+        $self->pass_update( $op => $obj, 'payload' );
 
-    like(
-        $got,
-        qr/Can't use update_push on scalar field 'parents\.father'/,
-        "update_push on deep non-arrayref field exception"
-    );
+        # name is scalar
+        $self->fail_update( $op => $obj, 'name' );
+        # parents is hash
+        $self->fail_update( $op => $obj, 'parents' );
+    }
 };
 
-test 'update_set reference to alternate type' => sub {
+test 'update_remove must be on undef or ARRAY' => sub {
     my $self = shift;
-    my $obj  = $self->create_person;
 
-    my %got;
-    $got{scalar} = exception { $obj->update_set( 'tags', 'foo' ) };
-    $got{hashref} = exception { $obj->update_set( 'tags', {} ) };
+    for my $op (qw/update_remove/) {
+        my $obj = $self->create_person;
+        # payload starts undef
+        $self->pass_update( $op => $obj, payload => 'foo' );
+        # then push on a value
+        $obj->update_push( payload => 'foo' );
+        # then payload has a ARRAY
+        $self->pass_update( $op => $obj, payload => 'bar' );
 
-    for my $g ( keys %got ) {
-        like(
-            $got{$g},
-            qr/Can't use update_set on ARRAY field 'tags'/,
-            "update_set $g on arrayref field exception"
-        );
+        # name is scalar
+        $self->fail_update( $op => $obj, name => 'foo' );
+        # parents is hash
+        $self->fail_update( $op => $obj, parents => 'foo' );
+    }
+};
+
+test 'update_clear works on undef, scalar, ARRAY or HASH' => sub {
+    my $self = shift;
+
+    for my $op (qw/update_clear/) {
+        my $obj = $self->create_person;
+        # payload starts undef
+        $self->pass_update( $op => $obj, 'payload' );
+        # then set a value
+        $obj->update_set( payload => 'foo' );
+        # then payload has a scalar
+        $self->pass_update( $op => $obj, 'payload' );
+        # tags is array
+        $self->pass_update( $op => $obj, 'tags' );
+        # parents is hash
+        $self->pass_update( $op => $obj, 'parents' );
     }
 };
 
