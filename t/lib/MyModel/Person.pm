@@ -36,6 +36,8 @@ has parents => (
     default => sub { {} },
 );
 
+has payload => ( is => 'ro' ); # no type constaint so we can experiment
+
 sub _indexes {
     return ( [ { unique => 1 }, name => 1 ], [ tags => 1, likes => 1 ], );
 }

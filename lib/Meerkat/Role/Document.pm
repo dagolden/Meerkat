@@ -349,7 +349,7 @@ sub _deep_field {
     my $target = eval { $self->$head };
     croak "Invalid attribute '$head'" if $@;
     return unless defined $target;
-    while ( my $p = shift @tail ) {
+    while ( defined( my $p = shift @tail ) ) {
         my $ref = ref $target;
         if ( $ref eq 'ARRAY' ) {
             croak
