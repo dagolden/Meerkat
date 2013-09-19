@@ -332,17 +332,20 @@ See the L<Meerkat::Cookbook> for more information.
 
 sub _indexes { return }
 
-#--------------------------------------------------------------------------#
-# private methods
-#--------------------------------------------------------------------------#
+=method _deep_field
 
-sub _check_arrayref {
-    my ( $self, $op, $field ) = @_;
-    croak "Can't use $op on non-arrayref field '$field'"
-      unless ref( $self->_deep_field($field) ) eq 'ARRAY';
-}
+    my $value = $obj->_deep_field( "parent.father" );
+    my $value = $obj->_deep_field( "tags.0" );
 
-# return whatever 'foo.bar.baz' refers to
+Retrieves a field deep in the object's data structure using MongoDB's dot
+notation.  Returns undef if the field does not exist.  Throws an error if the
+dot notation would do an illegal dereference.
+
+This is far less efficient than accessing an attribute and dereferencing
+directly.  It is used internally for validation of update_* fields.
+
+=cut
+
 sub _deep_field {
     my ( $self, $field ) = @_;
     my ( $head, @tail ) = split /\./, $field;
