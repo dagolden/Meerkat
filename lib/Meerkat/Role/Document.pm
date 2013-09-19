@@ -144,6 +144,7 @@ removed.
 sub update_push {
     state $check = compile( Object, Defined, slurpy ArrayRef );
     my ( $self, $field, $list ) = $check->(@_);
+    $self->_check_arrayref( update_push => $field );
     return $self->update( { '$push' => { "$field" => { '$each' => $list } } } );
 }
 
@@ -162,6 +163,7 @@ the method returns false and the object is marked as removed.
 sub update_add {
     state $check = compile( Object, Defined, slurpy ArrayRef );
     my ( $self, $field, $list ) = $check->(@_);
+    $self->_check_arrayref( update_add => $field );
     return $self->update( { '$addToSet' => { "$field" => { '$each' => $list } } } );
 }
 
@@ -180,6 +182,7 @@ the object is marked as removed.
 sub update_pop {
     state $check = compile( Object, Defined );
     my ( $self, $field ) = $check->(@_);
+    $self->_check_arrayref( update_pop => $field );
     return $self->update( { '$pop' => { "$field" => 1 } } );
 }
 
@@ -198,6 +201,7 @@ the object is marked as removed.
 sub update_shift {
     state $check = compile( Object, Defined );
     my ( $self, $field ) = $check->(@_);
+    $self->_check_arrayref( update_shift => $field );
     return $self->update( { '$pop' => { "$field" => -1 } } );
 }
 
@@ -216,6 +220,7 @@ removed.
 sub update_remove {
     state $check = compile( Object, Defined, slurpy ArrayRef );
     my ( $self, $field, $list ) = $check->(@_);
+    $self->_check_arrayref( update_remove => $field );
     return $self->update( { '$pullAll' => { "$field" => $list } } );
 }
 
@@ -232,6 +237,7 @@ removed, the method returns false and the object is marked as removed.
 sub update_clear {
     state $check = compile( Object, Defined );
     my ( $self, $field ) = $check->(@_);
+    $self->_check_arrayref( update_clear => $field );
     return $self->update( { '$set' => { "$field" => [] } } );
 }
 
@@ -325,6 +331,44 @@ See the L<Meerkat::Cookbook> for more information.
 =cut
 
 sub _indexes { return }
+
+#--------------------------------------------------------------------------#
+# private methods
+#--------------------------------------------------------------------------#
+
+sub _check_arrayref {
+    my ( $self, $op, $field ) = @_;
+    croak "Can't use $op on non-arrayref field '$field'"
+      unless ref( $self->_deep_field($field) ) eq 'ARRAY';
+}
+
+# return whatever 'foo.bar.baz' refers to
+sub _deep_field {
+    my ( $self, $field ) = @_;
+    my ( $head, @tail ) = split /\./, $field;
+    my $target = eval { $self->$head };
+    croak "Invalid attribute '$head'" if $@;
+    return unless defined $target;
+    while ( my $p = shift @tail ) {
+        my $ref = ref $target;
+        if ( $ref eq 'ARRAY' ) {
+            croak
+              "Invalid subdocument '$head.$p': '$head' is an array but $p is not positive integer"
+              unless $p =~ /^\d+$/;
+            return if $p > $#{$target}; # doesn't exist yet
+            $target = $target->[$p];
+        }
+        elsif ( $ref eq 'HASH' ) {
+            return unless exists $target->{$p};
+            $target = $target->{$p};
+        }
+        else {
+            croak "Invalid subdocument '$head.$p': '$head' is not a reference";
+        }
+        $head .= ".$p";
+    }
+    return $target;
+}
 
 1;
 

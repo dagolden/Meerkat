@@ -44,10 +44,23 @@ test 'array ops on non array field' => sub {
     for my $op ( sort keys %got ) {
         like(
             $got{$op},
-            qr/Can't use update_$op on a non-arrayref field/,
+            qr/Can't use update_$op on non-arrayref field 'name'/,
             "update_$op on non-arrayref field exception"
         );
     }
+};
+
+test 'array ops on deep non array field' => sub {
+    my $self = shift;
+    my $obj  = $self->create_person;
+
+    my $got = exception { $obj->update_push( 'parents.birth', qw/foo bar/ ) };
+
+    like(
+        $got,
+        qr/Can't use update_push on non-arrayref field 'parents\.birth'/,
+        "update_push on deep non-arrayref field exception"
+    );
 };
 
 run_me;
