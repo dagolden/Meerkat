@@ -352,7 +352,7 @@ Meerkat focuses on:
 * A document-centric data model
 
 Because it is less ambitious, Meerkat is smaller and less complex, currently
-about 450 lines of code split across six modules.
+about 510 lines of code split across six modules.
 
 =head1 SEE ALSO
 

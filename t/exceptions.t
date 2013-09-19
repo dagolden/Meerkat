@@ -29,7 +29,7 @@ test 'bad sync' => sub {
     cmp_deeply( $obj, $copy, "object is unchanged" );
 };
 
-test 'update_set must be on scalar or undef' => sub {
+test 'update_set must be on scalar or undef or same type' => sub {
     my $self = shift;
     my $obj  = $self->create_person;
 
@@ -37,9 +37,13 @@ test 'update_set must be on scalar or undef' => sub {
     $self->pass_update( update_set => $obj, payload => 'foo' );
     # then payload has a scalar value
     $self->pass_update( update_set => $obj, payload => 'bar' );
+    # tags is already array ref
+    $self->pass_update( update_set => $obj, tags => ['bar'] );
+    # parents is already hashref
+    $self->pass_update( update_set => $obj, parents => { dad => 'Vader' } );
 
-    $self->fail_update( update_set => $obj, tags    => 'foo' );
-    $self->fail_update( update_set => $obj, parents => 'foo' );
+    $self->fail_type_update( update_set => $obj, tags    => 'foo' );
+    $self->fail_type_update( update_set => $obj, parents => 'foo' );
 };
 
 test 'update_inc must be on scalar number or undef' => sub {

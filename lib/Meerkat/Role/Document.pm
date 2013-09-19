@@ -12,7 +12,8 @@ use MooseX::Storage;
 use MooseX::Storage::Engine;
 
 use Carp qw/croak/;
-use Syntax::Keyword::Junction qw/any/;
+use Scalar::Util qw/blessed/;
+use Syntax::Keyword::Junction qw/any none/;
 use MongoDB::OID;
 use Type::Params qw/compile/;
 use Types::Standard qw/slurpy :types/;
@@ -100,16 +101,31 @@ sub update {
 
     $obj->update_set( name => "Luke Skywalker" );
 
-Sets a field to a value.  This is the MongoDB C<$set> operator.  Returns true
-if the update is applied and synchronized.  If the document has been removed,
-the method returns false and the object is marked as removed.
+Sets a field to a value.  This is the MongoDB C<$set> operator.
+
+The field must be undefined or else the existing value and the new value must
+be of similar types (e.g. array or hash reference).  For the purpose of this
+check, an object (e.g. a DateTime) is treated (opaquely) as a scalar value.  If
+the types do not match, an error will be thrown.
+
+Note this means that you can't set a defined value to undefined.  To remove a
+field entirely, see L</update_clear>.  If you need to make other structural
+changes, do it manually with the L</update> method.
+
+Returns true if the update is applied and synchronized.  If the document has
+been removed, the method returns false and the object is marked as removed.
 
 =cut
 
 sub update_set {
     state $check = compile( Object, Defined, Defined );
     my ( $self, $field, $value ) = $check->(@_);
-    $self->__check_op( $field, any(qw/undef scalar Meerkat::DateTime/) );
+    $self->__check_op( $field, any(qw/undef scalar object ARRAY HASH/) );
+    my $type        = $self->__field_type( $self->_deep_field($field) );
+    my $target_type = $self->__field_type($value);
+    croak "Can't use update_set to change $type field '$field' to $target_type"
+      if $type eq none(qw/undef object/) && $type ne $target_type;
+
     return $self->update( { '$set' => { "$field" => $value } } );
 }
 
@@ -119,10 +135,11 @@ sub update_set {
     $obj->update_inc( likes => -1 );
 
 Increments a field by a positive or negative value.  This is the MongoDB
-C<$inc> operator.  Returns true if the update is applied and synchronized.  If
-the document has been removed, the method returns false and the object is
-marked as removed.
+C<$inc> operator.  The field must be undefined or a numeric scalar value
+or an error will be thrown.
 
+Returns true if the update is applied and synchronized.  If the document has
+been removed, the method returns false and the object is marked as removed.
 
 =cut
 
@@ -141,9 +158,11 @@ sub update_inc {
     $obj->update_push( tags => qw/cool hot trendy/ );
 
 Pushes values onto an array reference field. This is the MongoDB C<$push>
-operator.  Returns true if the update is applied and synchronized.  If the
-document has been removed, the method returns false and the object is marked as
-removed.
+operator.  The field must be undefined or an array reference or an error
+is thrown.
+
+Returns true if the update is applied and synchronized.  If the document has
+been removed, the method returns false and the object is marked as removed.
 
 
 =cut
@@ -160,10 +179,11 @@ sub update_push {
     $obj->update_add( tags => qw/cool hot trendy/ );
 
 Pushes values onto an array reference field, but only if they do not already
-exist in the array.  This is the MongoDB C<$addToSet> operator.  Returns true
-if the update is applied and synchronized.  If the document has been removed,
-the method returns false and the object is marked as removed.
+exist in the array.  This is the MongoDB C<$addToSet> operator.  The field
+must be undefined or an array reference or an error is thrown.
 
+Returns true if the update is applied and synchronized.  If the document has
+been removed, the method returns false and the object is marked as removed.
 
 =cut
 
@@ -179,10 +199,11 @@ sub update_add {
     $obj->update_pop( 'tags' );
 
 Removes a value from the end of the array.  This is the MongoDB C<$pop>
-operator with a direction of "1".  Returns true if the update is applied and
-synchronized.  If the document has been removed, the method returns false and
-the object is marked as removed.
+operator with a direction of "1".    The field must be undefined or an array
+reference or an error is thrown.
 
+Returns true if the update is applied and synchronized.  If the document has
+been removed, the method returns false and the object is marked as removed.
 
 =cut
 
@@ -198,9 +219,11 @@ sub update_pop {
     $obj->update_shift( 'tags' );
 
 Removes a value from the front of the array.  This is the MongoDB C<$pop>
-operator with a direction of "-1".  Returns true if the update is applied and
-synchronized.  If the document has been removed, the method returns false and
-the object is marked as removed.
+operator with a direction of "-1".   The field must be undefined or an array
+reference or an error is thrown.
+
+Returns true if the update is applied and synchronized.  If the document has
+been removed, the method returns false and the object is marked as removed.
 
 
 =cut
@@ -217,9 +240,11 @@ sub update_shift {
     $obj->update_remove( tags => qw/cool hot/ );
 
 Removes a list of values from the array.  This is the MongoDB C<$pullAll>
-operator.  Returns true if the update is applied and synchronized.  If the
-document has been removed, the method returns false and the object is marked as
-removed.
+operator.   The field must be undefined or an array reference or an error is
+thrown.
+
+Returns true if the update is applied and synchronized.  If the document has
+been removed, the method returns false and the object is marked as removed.
 
 
 =cut
@@ -235,10 +260,9 @@ sub update_remove {
 
     $obj->update_clear( 'tags' );
 
-Removes a scalar field from a document (the MongoDB C<$unset> operator) or
-empties a hash or array field (doing a C<$set> to an empty reference).  Returns
-true if the update is applied and synchronized.  If the document has been
-removed, the method returns false and the object is marked as removed.
+Removes a field from a document.  This is the MongoDB C<$unset> operator.
+Returns true if the update is applied and synchronized.  If the document has
+been removed, the method returns false and the object is marked as removed.
 
 Be sure not to clear any required fields.
 
@@ -247,17 +271,8 @@ Be sure not to clear any required fields.
 sub update_clear {
     state $check = compile( Object, Defined );
     my ( $self, $field ) = $check->(@_);
-    $self->__check_op( $field, any(qw/undef scalar ARRAY HASH/) );
-    my $type = $self->__field_type($field);
-    if ( $type eq 'HASH' ) {
-        return $self->update( { '$set' => { "$field" => {} } } );
-    }
-    elsif ( $type eq 'ARRAY' ) {
-        return $self->update( { '$set' => { "$field" => [] } } );
-    }
-    else {
-        return $self->update( { '$unset' => { "$field" => undef } } );
-    }
+    $self->__check_op( $field, any(qw/undef scalar object ARRAY HASH/) );
+    return $self->update( { '$unset' => { "$field" => undef } } );
 }
 
 =method sync
@@ -402,7 +417,7 @@ sub _deep_field {
 
 sub __check_op {
     my ( $self, $field, $allowed ) = @_; # $allowed could be a junction
-    my $type = $self->__field_type($field);
+    my $type = $self->__field_type( $self->_deep_field($field) );
     unless ( $type eq $allowed ) {
         my ( undef, undef, undef, $sub ) = caller(1);
         $sub =~ s/.*::(\w+)$/$1/;
@@ -411,10 +426,10 @@ sub __check_op {
 }
 
 sub __field_type {
-    my ( $self, $field ) = @_;
-    my $value = $self->_deep_field($field);
-    my $ref   = ref $value;
-    return $ref ? $ref : defined($value) ? 'scalar' : 'undef';
+    my ( $self, $value ) = @_;
+    return 'undef' unless defined $value;
+    return 'object' if blessed($value);
+    return ref($value) || 'scalar';
 }
 
 1;

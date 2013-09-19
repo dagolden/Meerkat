@@ -80,7 +80,7 @@ sub create_person {
 
 sub fail_update {
     my ( $self, $op, $obj, $field, $value ) = @_;
-    my $type = $obj->__field_type($field);
+    my $type = $obj->__field_type( $obj->_deep_field($field) );
     like(
         exception { $obj->$op( $field, defined($value) ? $value : () ) },
         qr/Can't use $op on $type field '$field'/,
@@ -88,9 +88,20 @@ sub fail_update {
     );
 }
 
+sub fail_type_update {
+    my ( $self, $op, $obj, $field, $value ) = @_;
+    my $type        = $obj->__field_type( $obj->_deep_field($field) );
+    my $target_type = $obj->__field_type($value);
+    like(
+        exception { $obj->$op( $field, defined($value) ? $value : () ) },
+        qr/Can't use $op to change $type field '$field' to $target_type/,
+        "$op on $type field that changes type croaks"
+    );
+}
+
 sub pass_update {
     my ( $self, $op, $obj, $field, $value ) = @_;
-    my $type = $obj->__field_type($field);
+    my $type = $obj->__field_type( $obj->_deep_field($field) );
     is( exception { $obj->$op( $field, defined($value) ? $value : () ) },
         undef, "$op on $type field succeeds" );
 }
