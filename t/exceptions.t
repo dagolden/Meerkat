@@ -42,6 +42,22 @@ test 'update_set must be on scalar or undef' => sub {
     $self->fail_update( update_set => $obj, parents => 'foo' );
 };
 
+test 'update_inc must be on scalar number or undef' => sub {
+    my $self = shift;
+    my $obj  = $self->create_person;
+
+    # payload starts undef
+    $self->pass_update( update_inc => $obj, payload => 1 );
+    # then payload has a scalar numeric value
+    $self->pass_update( update_inc => $obj, payload => -1 );
+
+    like( exception { $obj->update_inc( name => 1 ) },
+        qr/non-numeric/, "update_inc on non-numeric field croaks" );
+
+    $self->fail_update( update_inc => $obj, tags    => 1 );
+    $self->fail_update( update_inc => $obj, parents => 1 );
+};
+
 test 'update_push/add must be on undef or ARRAY' => sub {
     my $self = shift;
 

@@ -16,6 +16,7 @@ use Syntax::Keyword::Junction qw/any/;
 use MongoDB::OID;
 use Type::Params qw/compile/;
 use Types::Standard qw/slurpy :types/;
+use Scalar::Util qw/looks_like_number/; # XXX crude but fast
 
 use namespace::autoclean;
 
@@ -128,6 +129,10 @@ marked as removed.
 sub update_inc {
     state $check = compile( Object, Defined, Defined );
     my ( $self, $field, $value ) = $check->(@_);
+    $self->__check_op( $field, any(qw/undef scalar/) );
+    my $current = $self->$field;
+    croak "Can't use update_inc on non-numeric field '$field'"
+      if defined $current && !looks_like_number($current);
     return $self->update( { '$inc' => { "$field" => $value } } );
 }
 
