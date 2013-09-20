@@ -15,8 +15,8 @@ with 'TestFixtures';
 sub _build_meerkat_options {
     my ($self) = @_;
     return {
-        model_namespace      => 'MyModel',
-        collection_namespace => 'MyCollection',
+        model_namespace      => 'My::Model',
+        collection_namespace => 'My::Collection',
         database_name        => 'test',
     };
 }
@@ -26,7 +26,7 @@ use DDP;
 test 'custom collection' => sub {
     my $self   = shift;
     my $person = $self->person;
-    isa_ok( $person, "MyCollection::Person" );
+    isa_ok( $person, "My::Collection::Person" );
     ok( my $obj1 = $self->create_person, "created person" );
     ok( my $obj2 = $person->find_name( $obj1->name ), "searched by custom query" );
     is_deeply( $obj1, $obj2, "objects are the same" );

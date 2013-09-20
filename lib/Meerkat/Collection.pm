@@ -331,11 +331,11 @@ __PACKAGE__->meta->make_immutable;
     use Meerkat;
 
     my $meerkat = Meerkat->new(
-        model_namespace => "MyModel",
+        model_namespace => "My::Model",
         database_name   => "test"
     );
 
-    my $person = $meerkat->collection("Person"); # MyModel::Person
+    my $person = $meerkat->collection("Person"); # My::Model::Person
 
     # create an object and insert it into the MongoDB collection
     my $obj = $person->create( name => 'John' );

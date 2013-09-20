@@ -41,7 +41,7 @@ from your model classes, and pass that as the C<collection_namespace>
 parameter when creating a L<Meerkat> object:
 
     my $meerkat = Meerkat->new(
-        model_namespace      => "MyModel",
+        model_namespace      => "My::Model",
         collection_namespace => "MyCollection",
         database_name        => "test",
     );

@@ -20,7 +20,7 @@ use lib 't/lib';
 my $faker = Data::Faker->new;
 
 my $options = {
-    model_namespace => 'MyModel',
+    model_namespace => 'My::Model',
     database_name   => 'test',
 };
 

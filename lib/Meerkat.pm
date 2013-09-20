@@ -26,9 +26,9 @@ use namespace::autoclean;
 =attr model_namespace (required)
 
 A perl module namespace that will be prepended to class names requested
-via the L</collection> method.  If C<model_namespace> is "Foo::Bar", then
+via the L</collection> method.  If C<model_namespace> is "My::Model", then
 C<< $meerkat->collection("Baz") >> will load and associate the
-C<Foo::Bar::Baz> class in the returned collection object.
+C<My::Model::Baz> class in the returned collection object.
 
 =cut
 
@@ -53,6 +53,23 @@ has database_name => (
     required => 1,
 );
 
+=attr client_options
+
+A hash reference of L<MongoDB::MongoClient> options that will be passed to its
+C<connect> method.
+
+Note: The C<dt_type> will be forced to C<undef> so that the MongoDB client will
+provide time values as epoch seconds.  See the L<Meerkat::Cookbook> for more on
+dealing with dates and times.
+
+=cut
+
+has client_options => (
+    is      => 'ro',
+    isa     => 'HashRef', # hashlike?
+    default => sub { {} },
+);
+
 =attr collection_namespace
 
 A perl module namespace that will be be used to search for custom collection
@@ -69,23 +86,6 @@ using L<Meerkat::Collection>.
 has collection_namespace => (
     is  => 'ro',
     isa => 'Str',
-);
-
-=attr client_options
-
-A hash reference of L<MongoDB::MongoClient> options that will be passed to its
-C<connect> method.
-
-Note: The C<dt_type> will be forced to C<undef> so that the MongoDB client will
-provide time values as epoch seconds.  See the L<Meerkat::Cookbook> for more on
-dealing with dates and times.
-
-=cut
-
-has client_options => (
-    is      => 'ro',
-    isa     => 'HashRef', # hashlike?
-    default => sub { {} },
 );
 
 # set db_name for authentication if not set
@@ -159,7 +159,7 @@ has _collection_class_cache => (
 =method new
 
     my $meerkat = Meerkat->new(
-        model_namespace => "MyModel",
+        model_namespace => "My::Model",
         database_name   => "test",
         client_options  => {
             host => "mongodb://example.net:27017",
@@ -173,7 +173,7 @@ C<database_name> attributes are required.
 
 =method collection
 
-    my $person = $meerkat->collection("Person"); # MyModel::Person
+    my $person = $meerkat->collection("Person"); # My::Model::Person
 
 Returns a L<Meerkat::Collection> factory object or possibly a subclass if a
 C<collection_namespace> attribute has been provided. A single parameter is
@@ -247,7 +247,7 @@ __PACKAGE__->meta->make_immutable;
     use Meerkat;
 
     my $meerkat = Meerkat->new(
-        model_namespace => "MyModel",
+        model_namespace => "My::Model",
         database_name   => "test",
         client_options  => {
             host => "mongodb://example.net:27017",
@@ -256,7 +256,7 @@ __PACKAGE__->meta->make_immutable;
         },
     );
 
-    my $person = $meerkat->collection("Person"); # MyModel::Person
+    my $person = $meerkat->collection("Person"); # My::Model::Person
 
     # create an object and insert it into the MongoDB collection
     my $obj = $person->create( name => 'John' );
@@ -397,7 +397,7 @@ Meerkat focuses on:
 * A document-centric data model
 
 Because it is less ambitious, Meerkat is smaller and less complex, currently
-about 510 lines of code split across six modules.
+about 540 lines of code split across six modules.
 
 =head1 SEE ALSO
 

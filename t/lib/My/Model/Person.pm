@@ -1,4 +1,7 @@
-package MyModel::Person;
+use strict;
+use warnings;
+
+package My::Model::Person;
 
 use Moose 2;
 use Meerkat::Types qw/:all/;

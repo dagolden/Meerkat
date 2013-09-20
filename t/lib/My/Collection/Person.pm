@@ -1,8 +1,7 @@
-use 5.008001;
 use strict;
 use warnings;
 
-package MyCollection::Person;
+package My::Collection::Person;
 
 use Moose 2;
 extends 'Meerkat::Collection';

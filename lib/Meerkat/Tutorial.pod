@@ -16,10 +16,10 @@ Check that you can connect to the C<test> database from the C<mongo> shell:
 
 A Meerkat document is just a Moose class with the
 L<Meerkat::Role::Document> role applied.  This tutorial uses a simplified
-version of the C<MyModel::Person> class used for testing.  It has a
+version of the C<My::Model::Person> class used for testing.  It has a
 required C<name> attribute, and also attributes for C<likes> and C<tags>:
 
-    package MyModel::Person;
+    package My::Model::Person;
 
     use Moose;
 
@@ -61,11 +61,11 @@ to manage the connection to the database:
     use Meerkat;
 
     my $meerkat = Meerkat->new(
-        model_namespace => "MyModel",
+        model_namespace => "My::Model",
         database_name   => "test",
     );
 
-By specifying a C<model_namespace> of "MyModel", the object will return
+By specifying a C<model_namespace> of "My::Model", the object will return
 collections for classes underneath that namespace.  The example above will
 connect to the default MongoDB on localhost.  If your MongoDB is running on
 a different host or port, you could pass C<client_options> which will be
@@ -76,10 +76,10 @@ L<Meerkat::Collection> object from the Meerkat object.  A Meerkat collection
 associates a Perl class name with a specific MongoDB collection in the database
 managed by the Meerkat object.
 
-    my $person = $meerkat->collection("Person"); # MyModel::Person
+    my $person = $meerkat->collection("Person"); # My::Model::Person
 
 The collection name is derived from the Perl class by replacing "::" with "_".
-So "MyModel::Person" objects are stored in the "MyModel_Person" collection.
+So "My::Model::Person" objects are stored in the "My_Model_Person" collection.
 In this tutorial example, that collection is in the "test" database on the
 localhost MongoDB.
 

@@ -41,7 +41,7 @@ has meerkat_options => (
 sub _build_meerkat_options {
     my ($self) = @_;
     return {
-        model_namespace => 'MyModel',
+        model_namespace => 'My::Model',
         database_name   => 'test',
     };
 }

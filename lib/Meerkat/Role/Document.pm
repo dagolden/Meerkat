@@ -440,7 +440,7 @@ sub __field_type {
 
 Your model class:
 
-    package MyModel::Person;
+    package My::Model::Person;
 
     use Moose;
 
@@ -471,10 +471,11 @@ In your code:
     use Meerkat;
 
     my $meerkat = Meerkat->new(
-        model_namespace => "MyModel", database_name => "test"
+        model_namespace => "My::Model",
+        database_name => "test"
     );
 
-    my $person = $meerkat->collection("Person"); # MyModel::Person
+    my $person = $meerkat->collection("Person"); # My::Model::Person
 
     # create a document
     my $obj = $person->create( name => "Larry" );
