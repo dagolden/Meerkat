@@ -20,8 +20,8 @@ use lib 't/lib';
 my $faker = Data::Faker->new;
 
 my $options = {
-    namespace     => 'MyModel',
-    database_name => 'test',
+    model_namespace => 'MyModel',
+    database_name   => 'test',
 };
 
 my $mk     = Meerkat->new($options);

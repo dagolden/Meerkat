@@ -15,7 +15,7 @@ with 'TestFixtures';
 sub _build_meerkat_options {
     my ($self) = @_;
     return {
-        namespace            => 'MyModel',
+        model_namespace      => 'MyModel',
         collection_namespace => 'MyCollection',
         database_name        => 'test',
     };

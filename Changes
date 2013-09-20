@@ -2,6 +2,11 @@ Revision history for Meerkat
 
 {{$NEXT}}
 
+    [INCOMPATIBLE CHANGE]
+
+    - The required 'namespace' parameter was renamed 'model_namespace'
+      for consistency with the new 'collection_namespace' parameter.
+
     [ADDED]
 
     - Allows specifying a 'collection_namespace' to use custom collection

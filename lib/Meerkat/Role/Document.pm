@@ -471,7 +471,7 @@ In your code:
     use Meerkat;
 
     my $meerkat = Meerkat->new(
-        namespace => "MyModel", database_name => "test"
+        model_namespace => "MyModel", database_name => "test"
     );
 
     my $person = $meerkat->collection("Person"); # MyModel::Person

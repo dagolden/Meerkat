@@ -23,16 +23,16 @@ use namespace::autoclean;
 # Public attributes and builders
 #--------------------------------------------------------------------------#
 
-=attr namespace (required)
+=attr model_namespace (required)
 
 A perl module namespace that will be prepended to class names requested
-via the L</collection> method.  If C<namespace> is "Foo::Bar", then
+via the L</collection> method.  If C<model_namespace> is "Foo::Bar", then
 C<< $meerkat->collection("Baz") >> will load and associate the
 C<Foo::Bar::Baz> class in the returned collection object.
 
 =cut
 
-has namespace => (
+has model_namespace => (
     is       => 'ro',
     isa      => 'Str',
     required => 1,
@@ -159,16 +159,16 @@ has _collection_class_cache => (
 =method new
 
     my $meerkat = Meerkat->new(
-        namespace      => "MyModel",
-        database_name  => "test",
-        client_options => {
+        model_namespace => "MyModel",
+        database_name   => "test",
+        client_options  => {
             host => "mongodb://example.net:27017",
             username => "willywonka",
             password => "ilovechocolate",
         },
     );
 
-Generates and returns a new Meerkat object.  The C<namespace> and
+Generates and returns a new Meerkat object.  The C<model_namespace> and
 C<database_name> attributes are required.
 
 =method collection
@@ -185,7 +185,7 @@ Meerkat::Collection C<class> attribute.
 sub collection {
     state $check = compile( Object, Str );
     my ( $self, $suffix ) = $check->(@_);
-    my $class      = $self->namespace . "::" . $suffix;
+    my $class      = $self->model_namespace . "::" . $suffix;
     my $collection = $self->_find_collection_class($suffix);
     return $collection->new( class => $class, meerkat => $self );
 }
@@ -247,9 +247,9 @@ __PACKAGE__->meta->make_immutable;
     use Meerkat;
 
     my $meerkat = Meerkat->new(
-        namespace      => "MyModel",
-        database_name  => "test",
-        client_options => {
+        model_namespace => "MyModel",
+        database_name   => "test",
+        client_options  => {
             host => "mongodb://example.net:27017",
             username => "willywonka",
             password => "ilovechocolate",
