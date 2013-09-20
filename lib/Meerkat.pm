@@ -11,7 +11,9 @@ use Moose 2;
 use MooseX::AttributeShortcuts;
 
 use Meerkat::Collection;
+use Module::Runtime qw/require_module compose_module_name/;
 use MongoDB;
+use Try::Tiny;
 use Type::Params qw/compile/;
 use Types::Standard qw/:types/;
 
@@ -49,6 +51,24 @@ has database_name => (
     is       => 'ro',
     isa      => 'Str',
     required => 1,
+);
+
+=attr collection_namespace
+
+A perl module namespace that will be be used to search for custom collection
+classes.  The C<collection_namespace> will be prepended to class names
+requested via the L</collection> method.  If C<collection_namespace> is
+"My::Collection", then C<< $meerkat->collection("Baz") >> will load and use
+C<My::Collection::Baz> for constructing a collection object.  If
+C<collection_namespace> is not provided or if no class is found under the
+namespace (or if it fails to load), then collection objects will be constructed
+using L<Meerkat::Collection>.
+
+=cut
+
+has collection_namespace => (
+    is  => 'ro',
+    isa => 'Str',
 );
 
 =attr client_options
@@ -126,6 +146,12 @@ sub _build__collection_cache {
     return {};
 }
 
+has _collection_class_cache => (
+    is      => 'ro',
+    isa     => 'HashRef',
+    default => sub { {} },
+);
+
 #--------------------------------------------------------------------------#
 # Methods
 #--------------------------------------------------------------------------#
@@ -149,17 +175,19 @@ C<database_name> attributes are required.
 
     my $person = $meerkat->collection("Person"); # MyModel::Person
 
-Returns a L<Meerkat::Collection> factory object.  A single parameter
-is required and is used as the suffix of a class name provided to
-the Meerkat::Collection C<class> attribute.
+Returns a L<Meerkat::Collection> factory object or possibly a subclass if a
+C<collection_namespace> attribute has been provided. A single parameter is
+required and is used as the suffix of a class name provided to the
+Meerkat::Collection C<class> attribute.
 
 =cut
 
 sub collection {
     state $check = compile( Object, Str );
     my ( $self, $suffix ) = $check->(@_);
-    my $class = $self->namespace . "::" . $suffix;
-    return Meerkat::Collection->new( class => $class, meerkat => $self );
+    my $class      = $self->namespace . "::" . $suffix;
+    my $collection = $self->_find_collection_class($suffix);
+    return $collection->new( class => $class, meerkat => $self );
 }
 
 #--------------------------------------------------------------------------#
@@ -189,6 +217,23 @@ sub _check_pid {
         $self->_clear_mongo_client;
     }
     return;
+}
+
+sub _find_collection_class {
+    my ( $self, $suffix ) = @_;
+    my $prefix = $self->collection_namespace;
+
+    if ( !$prefix ) {
+        return "Meerkat::Collection";
+    }
+    elsif ( my $cache = $self->_collection_class_cache->{$suffix} ) {
+        return $cache;
+    }
+    else {
+        my $class = compose_module_name( $prefix, $suffix );
+        try { require_module($class) } catch { $class = "Meerkat::Collection" };
+        return $self->_collection_class_cache->{$suffix} = $class;
+    }
 }
 
 __PACKAGE__->meta->make_immutable;

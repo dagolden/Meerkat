@@ -20,6 +20,38 @@ trait from L<MooseX::Storage>:
 
     sub _build_big_object { ... }
 
+=head2 Custom collection classes
+
+You can extend L<Meerkat::Collection> and add additional methods
+for things like common queries or collection maintenance.  Here
+is a custom collection class that adds a query method:
+
+    package MyCollection::Person;
+
+    use Moose 2;
+    extends 'Meerkat::Collection';
+
+    sub find_by_name {
+        my ( $self, $name ) = @_;
+        return $self->find_one( { name => $name } );
+    }
+
+To use custom collection classes, put them under a different namespace
+from your model classes, and pass that as the C<collection_namespace>
+parameter when creating a L<Meerkat> object:
+
+    my $meerkat = Meerkat->new(
+        namespace            => "MyModel",
+        collection_namespace => "MyCollection",
+        database_name        => "test",
+    );
+
+Then, collection requests will use C<MyCollection::*> or will fall
+back to C<Meerkat::Collection>:
+
+    my $person = $meerkat->collection( "Person" ); # MyCollection::Person
+    my $other  = $meerkat->collection( "Other" );  # Meerkat::Collection
+
 =head2 Date objects
 
 Do you really need them in your model?  MongoDB does have support for inflating
