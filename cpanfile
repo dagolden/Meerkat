@@ -1,5 +1,4 @@
 requires "Carp" => "0";
-requires "Class::Load" => "0";
 requires "DateTime" => "0";
 requires "Module::Runtime" => "0";
 requires "MongoDB" => "0";

@@ -185,7 +185,7 @@ Meerkat::Collection C<class> attribute.
 sub collection {
     state $check = compile( Object, Str );
     my ( $self, $suffix ) = $check->(@_);
-    my $class      = $self->model_namespace . "::" . $suffix;
+    my $class = compose_module_name( $self->model_namespace, $suffix );
     my $collection = $self->_find_collection_class($suffix);
     return $collection->new( class => $class, meerkat => $self );
 }

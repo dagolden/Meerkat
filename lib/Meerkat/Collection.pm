@@ -8,13 +8,13 @@ package Meerkat::Collection;
 
 use Moose 2;
 use MooseX::AttributeShortcuts;
-use Meerkat::Cursor;
 
 use Carp qw/croak/;
-use Class::Load qw/load_class/;
+use Meerkat::Cursor;
+use Module::Runtime qw/require_module/;
+use Try::Tiny;
 use Type::Params qw/compile/;
 use Types::Standard qw/slurpy :types/;
-use Try::Tiny;
 
 use namespace::autoclean;
 
@@ -68,13 +68,19 @@ sub _build_collection_name {
     return $name;
 }
 
+has _class_loaded => (
+    is  => 'rw',
+    isa => 'Bool',
+);
+
 #--------------------------------------------------------------------------#
 # Constructor
 #--------------------------------------------------------------------------#
 
 sub BUILD {
     my ($self) = @_;
-    load_class( $self->class );
+    return if $self->_class_loaded;
+    require_module( $self->class ) and $self->_class_loaded(1);
 }
 
 #--------------------------------------------------------------------------#
