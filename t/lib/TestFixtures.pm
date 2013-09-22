@@ -62,7 +62,7 @@ sub _build_person {
 
 before each_test => sub {
     my ($self) = @_;
-    $self->meerkat->_database->drop;
+    $self->meerkat->mongo_collection("My_Model_Person")->drop;
 };
 
 #--------------------------------------------------------------------------#

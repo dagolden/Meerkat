@@ -19,9 +19,7 @@ use Types::Standard qw/:types/;
 
 use namespace::autoclean;
 
-#--------------------------------------------------------------------------#
-# Public attributes and builders
-#--------------------------------------------------------------------------#
+with 'MooseX::Role::MongoDB';
 
 =attr model_namespace (required)
 
@@ -88,69 +86,18 @@ has collection_namespace => (
     isa => 'Str',
 );
 
-# set db_name for authentication if not set
 sub BUILD {
     my ($self) = @_;
-    my $client_options = $self->client_options;
-
-    # Default to using the provided database for authentication
-    $client_options->{db_name} //= $self->database_name;
 
     # We force MongoDB to convert its internal datetimes to epoch values so we
     # can proxy them with Meerkat::DateTime objects; storage of DateTime or
     # DateTime::Tiny are automatically converted regardless of this setting.
-    $client_options->{dt_type} = undef;
+    $self->client_options->{dt_type} = undef;
 }
 
-#--------------------------------------------------------------------------#
-# Private attributes and builders
-#--------------------------------------------------------------------------#
-
-has _pid => (
-    is      => 'rwp',
-    isa     => 'Num',
-    default => sub { $$ },
-);
-
-has _mongo_client => (
-    is        => 'lazy',
-    isa       => 'MongoDB::MongoClient',
-    clearer   => 1,
-    predicate => 1,
-);
-
-sub _build__mongo_client {
-    my ($self) = @_;
-    return MongoDB::MongoClient->new( $self->client_options );
-}
-
-has _database => (
-    is      => 'lazy',
-    isa     => 'MongoDB::Database',
-    clearer => 1,
-);
-
-sub _build__database {
-    my ($self) = @_;
-    return $self->_mongo_client->get_database( $self->database_name );
-}
-
-has _collection_cache => (
-    is      => 'lazy',
-    isa     => 'HashRef',
-    clearer => 1,
-);
-
-sub _build__collection_cache {
-    my ($self) = @_;
-    return {};
-}
-
-has _collection_class_cache => (
-    is      => 'ro',
-    isa     => 'HashRef',
-    default => sub { {} },
-);
+# configure MooseX::Role::MongodB
+sub _build__mongo_client_options   { $_[0]->client_options }
+sub _build__mongo_default_database { $_[0]->database_name }
 
 #--------------------------------------------------------------------------#
 # Methods
@@ -185,62 +132,23 @@ Meerkat::Collection C<class> attribute.
 sub collection {
     state $check = compile( Object, Str );
     my ( $self, $suffix ) = $check->(@_);
-    my $class = compose_module_name( $self->model_namespace, $suffix );
-    my $collection = $self->_find_collection_class($suffix);
-    return $collection->new( class => $class, meerkat => $self );
-}
-
-#--------------------------------------------------------------------------#
-# Semi-private methods
-#--------------------------------------------------------------------------#
-
-# used by other Meerkat classes; we manage collections to centralize
-# necessasry reconnection on fork
-sub get_mongo_collection {
-    state $check = compile( Object, Str );
-    my ( $self, $name ) = $check->(@_);
-    $self->_check_pid;
-    return $self->_collection_cache->{$name} ||= $self->_database->get_collection($name);
-}
-
-#--------------------------------------------------------------------------#
-# Private methods
-#--------------------------------------------------------------------------#
-
-# check if we've forked and need to reconnect
-sub _check_pid {
-    my ($self) = @_;
-    if ( $$ != $self->_pid ) {
-        $self->_set__pid($$);
-        $self->_clear_collection_cache;
-        $self->_clear_database;
-        $self->_clear_mongo_client;
-    }
-    return;
-}
-
-sub _find_collection_class {
-    my ( $self, $suffix ) = @_;
-    my $prefix = $self->collection_namespace;
-
-    if ( !$prefix ) {
-        return "Meerkat::Collection";
-    }
-    elsif ( my $cache = $self->_collection_class_cache->{$suffix} ) {
-        return $cache;
+    my $model = compose_module_name( $self->model_namespace, $suffix );
+    my $class;
+    if ( my $prefix = $self->collection_namespace ) {
+        $class = compose_module_name( $prefix, $suffix );
+        try { require_module($class) } catch { $class = "Meerkat::Collection" };
     }
     else {
-        my $class = compose_module_name( $prefix, $suffix );
-        try { require_module($class) } catch { $class = "Meerkat::Collection" };
-        return $self->_collection_class_cache->{$suffix} = $class;
+        $class = "Meerkat::Collection";
     }
+    return $class->new( class => $model, meerkat => $self );
 }
 
 __PACKAGE__->meta->make_immutable;
 
 1;
 
-=for Pod::Coverage BUILD get_mongo_collection
+=for Pod::Coverage BUILD
 
 =head1 SYNOPSIS
 
@@ -288,7 +196,7 @@ with the result.
 Meerkat is not an object-relational mapper.  It does not offer or manage relations
 or support embedded objects.
 
-Meerkat is fork-safe.  It manage a cache of MongoDB::Collection objects that
+Meerkat is fork-safe.  It maintains a cache of MongoDB::Collection objects that
 gets cleared when a fork occurs.  Meerkat will transparently reconnect from
 child processes.
 
@@ -397,7 +305,7 @@ Meerkat focuses on:
 * A document-centric data model
 
 Because it is less ambitious, Meerkat is smaller and less complex, currently
-about 540 lines of code split across six modules.
+about 480 lines of code split across six modules.
 
 =head1 SEE ALSO
 

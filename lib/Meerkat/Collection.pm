@@ -286,7 +286,7 @@ sub thaw_object {
 sub _mongo_collection {
     state $check = compile(Object);
     my ($self) = $check->(@_);
-    return $self->meerkat->get_mongo_collection( $self->collection_name );
+    return $self->meerkat->mongo_collection( $self->collection_name );
 }
 
 sub _save {
