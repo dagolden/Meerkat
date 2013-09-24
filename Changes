@@ -2,6 +2,8 @@ Revision history for Meerkat
 
 {{$NEXT}}
 
+0.004     2013-09-24 19:51:46 America/New_York
+
     [FIXES]
 
     - Fixes crash searching for non-existent documents
