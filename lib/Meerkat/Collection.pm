@@ -145,7 +145,7 @@ sub find_id {
     state $check = compile( Object, Defined );
     my ( $self, $id ) = $check->(@_);
     $id = ref($id) eq 'MongoDB::OID' ? $id : MongoDB::OID->new($id);
-    my $data = $self->_mongo_collection->find_one( { _id => $id } );
+    return unless my $data = $self->_mongo_collection->find_one( { _id => $id } );
     return $self->thaw_object($data);
 }
 
@@ -162,7 +162,7 @@ found or throws an error if one occurs.
 sub find_one {
     state $check = compile( Object, HashRef );
     my ( $self, $query ) = $check->(@_);
-    my $data = $self->_mongo_collection->find_one($query);
+    return unless my $data = $self->_mongo_collection->find_one($query);
     return $self->thaw_object($data);
 }
 

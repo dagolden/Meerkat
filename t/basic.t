@@ -3,7 +3,7 @@ use warnings;
 use Test::Roo;
 use Test::FailWarnings;
 use Test::Fatal;
-use Test::Requires qw/MongoDB::MongoClient/;
+use Test::Requires qw/MongoDB::MongoClient MongoDB::OID/;
 
 my $conn = eval { MongoDB::MongoClient->new; };
 plan skip_all => "No MongoDB on localhost" unless $conn;
@@ -47,6 +47,17 @@ test 'round trip' => sub {
     my $obj4 = $cursor->next;
     is_deeply( $obj4, $obj1, "retrieve first object from database by cursor" );
 
+};
+
+test 'not found' => sub {
+    my $self = shift;
+    ok( my $obj1 = $self->create_person, "created object" );
+
+    my $fake_id = MongoDB::OID->new;
+    is( $self->person->find_id($fake_id),
+        undef, "find_id on non-existent doc returns undef" );
+    is( $self->person->find_one( { _id => $fake_id } ),
+        undef, "find_one on non-existent doc returns undef" );
 };
 
 test 'remove' => sub {
