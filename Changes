@@ -2,6 +2,8 @@ Revision history for Meerkat
 
 {{$NEXT}}
 
+0.005     2013-10-14 15:12:25 America/New_York
+
     [PREREQS]
 
     - Bump MooseX::Role::MongoDB prerequisite to 0.002
