@@ -22,7 +22,6 @@ requires "strict" => "0";
 requires "warnings" => "0";
 
 on 'test' => sub {
-  requires "DDP" => "0";
   requires "Data::Faker" => "0";
   requires "DateTime::Tiny" => "0";
   requires "ExtUtils::MakeMaker" => "0";

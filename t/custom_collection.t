@@ -21,8 +21,6 @@ sub _build_meerkat_options {
     };
 }
 
-use DDP;
-
 test 'custom collection' => sub {
     my $self   = shift;
     my $person = $self->person;
