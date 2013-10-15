@@ -200,7 +200,7 @@ Meerkat is fork-safe.  It maintains a cache of MongoDB::Collection objects that
 gets cleared when a fork occurs.  Meerkat will transparently reconnect from
 child processes.
 
-=usage
+=head1 USAGE
 
 Meerkat divides functional responsibilities across six classes:
 
