@@ -6,6 +6,7 @@ requires "MongoDB::OID" => "0";
 requires "Moose" => "2";
 requires "Moose::Role" => "2";
 requires "MooseX::AttributeShortcuts" => "0";
+requires "MooseX::Role::Logger" => "0";
 requires "MooseX::Role::MongoDB" => "0.002";
 requires "MooseX::Storage" => "0";
 requires "MooseX::Storage::Engine" => "0";
@@ -37,6 +38,11 @@ on 'test' => sub {
   requires "Test::Roo::Role" => "0";
   requires "Time::HiRes" => "0";
   requires "lib" => "0";
+};
+
+on 'test' => sub {
+  recommends "CPAN::Meta" => "0";
+  recommends "CPAN::Meta::Requirements" => "0";
 };
 
 on 'configure' => sub {

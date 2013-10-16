@@ -2,6 +2,10 @@ Revision history for Meerkat
 
 {{$NEXT}}
 
+    [FIXES]
+
+    - Added MooseX::Role::Logger as required by new MooseX::Role::MongoDB
+
 0.005     2013-10-14 15:12:25 America/New_York
 
     [PREREQS]
