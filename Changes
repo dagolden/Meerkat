@@ -2,6 +2,11 @@ Revision history for Meerkat
 
 {{$NEXT}}
 
+    [ADDED]
+
+    - MongoDB operations will retry with exponential backoff if Meerkat
+      detects that the database connection has been lost
+
 0.006     2013-10-16 11:47:06 America/New_York
 
     [FIXES]

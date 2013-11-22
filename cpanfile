@@ -7,13 +7,14 @@ requires "Moose" => "2";
 requires "Moose::Role" => "2";
 requires "MooseX::AttributeShortcuts" => "0";
 requires "MooseX::Role::Logger" => "0";
-requires "MooseX::Role::MongoDB" => "0.002";
+requires "MooseX::Role::MongoDB" => "0.005";
 requires "MooseX::Storage" => "0";
 requires "MooseX::Storage::Engine" => "0";
 requires "MooseX::Types" => "0";
 requires "Scalar::Util" => "0";
 requires "Syntax::Keyword::Junction" => "0";
 requires "Try::Tiny" => "0";
+requires "Try::Tiny::Retry" => "0.002";
 requires "Type::Params" => "0";
 requires "Types::Standard" => "0";
 requires "aliased" => "0";
@@ -50,6 +51,8 @@ on 'configure' => sub {
 };
 
 on 'develop' => sub {
+  requires "Dist::Zilla" => "5.006";
+  requires "Dist::Zilla::PluginBundle::DAGOLDEN" => "0.056";
   requires "File::Spec" => "0";
   requires "File::Temp" => "0";
   requires "IO::Handle" => "0";

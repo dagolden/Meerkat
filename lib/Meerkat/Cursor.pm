@@ -8,6 +8,7 @@ package Meerkat::Cursor;
 
 # Dependencies
 use Moose 2;
+use Try::Tiny::Retry 0.002 qw/:all/;
 
 =attr cursor (required)
 
@@ -41,7 +42,13 @@ around 'next' => sub {
     my $orig = shift;
     my $self = shift;
 
-    if ( my $data = $self->$orig ) {
+    my $data =
+      retry { $self->$orig },
+      retry_if { /not connected/ },
+      delay_exp { 5, 1e6 },
+      on_retry { $self->mongo_clear_caches };
+
+    if ($data) {
         return $self->collection->thaw_object($data);
     }
     else {
