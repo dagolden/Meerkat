@@ -19,7 +19,7 @@ use Types::Standard qw/:types/;
 
 use namespace::autoclean;
 
-with 'MooseX::Role::Logger', 'MooseX::Role::MongoDB' => { -version => 0.005 };
+with 'MooseX::Role::Logger', 'MooseX::Role::MongoDB' => { -version => 0.006 };
 
 =attr model_namespace (required)
 
@@ -143,6 +143,19 @@ sub collection {
     }
     return $class->new( class => $model, meerkat => $self );
 }
+
+=method mongo_collection
+
+    my $coll = $meerkat->mongo_collection("My_Model_Person");
+
+Returns a raw L<MongoDB::Collection> object from the associated database.
+This is used internally by L<Meerkat::Collection> and is not intended for
+general use.
+
+=cut
+
+# alias _mongo_collection provided by MooseX::Role::MongoDB
+*mongo_collection = *_mongo_collection;
 
 __PACKAGE__->meta->make_immutable;
 

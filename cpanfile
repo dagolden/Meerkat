@@ -7,7 +7,7 @@ requires "Moose" => "2";
 requires "Moose::Role" => "2";
 requires "MooseX::AttributeShortcuts" => "0";
 requires "MooseX::Role::Logger" => "0";
-requires "MooseX::Role::MongoDB" => "0.005";
+requires "MooseX::Role::MongoDB" => "0.006";
 requires "MooseX::Storage" => "0";
 requires "MooseX::Storage::Engine" => "0";
 requires "MooseX::Types" => "0";
@@ -39,11 +39,12 @@ on 'test' => sub {
   requires "Test::Roo::Role" => "0";
   requires "Time::HiRes" => "0";
   requires "lib" => "0";
+  requires "version" => "0";
 };
 
 on 'test' => sub {
   recommends "CPAN::Meta" => "0";
-  recommends "CPAN::Meta::Requirements" => "0";
+  recommends "CPAN::Meta::Requirements" => "2.120900";
 };
 
 on 'configure' => sub {
@@ -51,7 +52,7 @@ on 'configure' => sub {
 };
 
 on 'develop' => sub {
-  requires "Dist::Zilla" => "5.006";
+  requires "Dist::Zilla" => "5.012";
   requires "Dist::Zilla::PluginBundle::DAGOLDEN" => "0.056";
   requires "File::Spec" => "0";
   requires "File::Temp" => "0";

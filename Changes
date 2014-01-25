@@ -2,6 +2,10 @@ Revision history for Meerkat
 
 {{$NEXT}}
 
+    [FIXED]
+
+    - Fixed for changes in MooseX::Role::MongoDB 0.006
+
 0.007     2013-11-22 17:07:03 America/New_York
 
     [ADDED]
