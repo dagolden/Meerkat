@@ -123,7 +123,8 @@ the MongoDB L<count|MongoDB::Collection/count> method.
 sub count {
     state $check = compile( Object, Optional [HashRef] );
     my ( $self, $query ) = $check->(@_);
-    return $self->_try_mongo_op( sub { $self->_mongo_collection->count($query) } );
+    return $self->_try_mongo_op( count => sub { $self->_mongo_collection->count($query) }
+    );
 }
 
 =method find_id
@@ -146,8 +147,8 @@ sub find_id {
     my ( $self, $id ) = $check->(@_);
     $id = ref($id) eq 'MongoDB::OID' ? $id : MongoDB::OID->new($id);
     my $data =
-      $self->_try_mongo_op( sub { $self->_mongo_collection->find_one( { _id => $id } ) }
-      );
+      $self->_try_mongo_op(
+        find_id => sub { $self->_mongo_collection->find_one( { _id => $id } ) } );
     return unless $data;
     return $self->thaw_object($data);
 }
@@ -167,7 +168,8 @@ sub find_one {
     my ( $self, $query ) = $check->(@_);
     return
       unless my $data =
-      $self->_try_mongo_op( sub { $self->_mongo_collection->find_one($query) } );
+      $self->_try_mongo_op(
+        find_one => sub { $self->_mongo_collection->find_one($query) } );
     return $self->thaw_object($data);
 }
 
@@ -187,7 +189,8 @@ objects of the associated class.
 sub find {
     state $check = compile( Object, Optional [HashRef] );
     my ( $self, $query ) = $check->(@_);
-    my $cursor = $self->_try_mongo_op( sub { $self->_mongo_collection->find($query) } );
+    my $cursor =
+      $self->_try_mongo_op( find => sub { $self->_mongo_collection->find($query) } );
     return Meerkat::Cursor->new( cursor => $cursor, collection => $self );
 }
 
@@ -211,7 +214,8 @@ sub ensure_indexes {
         my @copy = @$index;
         my $options = ref $copy[0] eq 'HASH' ? shift @copy : {};
         $self->_try_mongo_op(
-            sub { $self->_mongo_collection->ensure_index( \@copy, $options ) } );
+            ensure_indexes => sub { $self->_mongo_collection->ensure_index( \@copy, $options ) }
+        );
     }
     return 1;
 }
@@ -225,7 +229,7 @@ sub remove {
     state $check = compile( Object, Object );
     my ( $self, $obj ) = $check->(@_);
     $self->_try_mongo_op(
-        sub { $self->_mongo_collection->remove( { _id => $obj->_id } ) } );
+        remove => sub { $self->_mongo_collection->remove( { _id => $obj->_id } ) } );
     $obj->_set_removed(1);
     return 1;
 }
@@ -242,7 +246,7 @@ sub sync {
     state $check = compile( Object, Object );
     my ( $self, $obj ) = $check->(@_);
     my $data = $self->_try_mongo_op(
-        sub { $self->_mongo_collection->find_one( { _id => $obj->_id } ) } );
+        sync => sub { $self->_mongo_collection->find_one( { _id => $obj->_id } ) } );
     if ($data) {
         $self->_sync( $data => $obj );
         $obj->_set_removed(0);
@@ -258,7 +262,7 @@ sub update {
     state $check = compile( Object, Object, HashRef );
     my ( $self, $obj, $update ) = $check->(@_);
     my $data = $self->_try_mongo_op(
-        sub {
+        update => sub {
             $self->_mongo_collection->find_and_modify(
                 {
                     query  => { _id => $obj->_id },
@@ -267,9 +271,6 @@ sub update {
                 }
             );
         },
-        catch {
-            $self->_croak("Update failed: $_");
-        }
     );
 
     if ( ref $data ) {
@@ -301,14 +302,15 @@ sub _mongo_collection {
 }
 
 sub _try_mongo_op {
-    state $check = compile( Object, CodeRef, slurpy ArrayRef );
-    my ( $self, $code, $rest ) = $check->(@_);
+    state $check = compile( Object, Str, CodeRef );
+    my ( $self, $action, $code, $rest ) = $check->(@_);
     # call &retry to bypass prototype
     return &retry(
         $code, @$rest,
         retry_if { /not connected/ },
         delay_exp { 5, 1e6 },
-        on_retry { $self->mongo_clear_caches }
+        on_retry { $self->mongo_clear_caches },
+        catch { croak "$action error: $_" }
     );
 }
 
@@ -317,7 +319,8 @@ sub _save {
     my ( $self, $obj ) = $check->(@_);
     my $pack = $obj->pack;
     delete $pack->{$_} for qw/__CLASS__ _collection _removed/;
-    return $self->_try_mongo_op( sub { !!$self->_mongo_collection->save($pack) } );
+    return $self->_try_mongo_op( sync => sub { !!$self->_mongo_collection->save($pack) }
+    );
 }
 
 sub _sync {

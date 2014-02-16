@@ -2,6 +2,10 @@ Revision history for Meerkat
 
 {{$NEXT}}
 
+    [FIXED]
+
+    - Retry failures should now properly throw errors
+
 0.008     2014-01-24 23:24:08-05:00 America/New_York
 
     [FIXED]
