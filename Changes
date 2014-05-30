@@ -2,6 +2,8 @@ Revision history for Meerkat
 
 {{$NEXT}}
 
+0.010     2014-05-30 16:54:28-04:00 America/New_York
+
     [FIXED]
 
     - Work around MongoDB ensure_index bug for non-numeric index types
