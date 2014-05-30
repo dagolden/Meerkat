@@ -213,6 +213,11 @@ sub ensure_indexes {
     for my $index (@$aoa) {
         my @copy = @$index;
         my $options = ref $copy[0] eq 'HASH' ? shift @copy : {};
+        if ( @copy % 2 != 0 ) {
+            $self->_croak(
+                "_indexes must provide a list of key/value pairs, with an optional leading hashref"
+            );
+        }
         $self->_try_mongo_op(
             ensure_indexes => sub { $self->_mongo_collection->ensure_index( \@copy, $options ) }
         );

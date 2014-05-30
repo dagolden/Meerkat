@@ -135,6 +135,22 @@ test 'update_clear works on undef, scalar, ARRAY or HASH' => sub {
     }
 };
 
+test 'exception on bad index args' => sub {
+    my $self = shift;
+
+    my $meerkat = Meerkat->new(
+        model_namespace => "Bad::Model",
+        database_name   => "test",
+    );
+    my $person = $meerkat->collection("Person");
+
+    like(
+        exception { $person->ensure_indexes },
+        qr{_indexes must provide a list of key/value pairs},
+        "bad _index format threw error"
+    );
+};
+
 run_me;
 done_testing;
 # COPYRIGHT
