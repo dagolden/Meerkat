@@ -140,7 +140,7 @@ test 'exception on bad index args' => sub {
 
     my $meerkat = Meerkat->new(
         model_namespace => "Bad::Model",
-        database_name   => "test",
+        database_name   => "test$$",
     );
     my $person = $meerkat->collection("Person");
 

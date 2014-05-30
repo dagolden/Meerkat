@@ -42,7 +42,7 @@ sub _build_meerkat_options {
     my ($self) = @_;
     return {
         model_namespace => 'My::Model',
-        database_name   => 'test',
+        database_name   => "test$$",
     };
 }
 
@@ -104,6 +104,11 @@ sub pass_update {
     my $type = $obj->__field_type( $obj->_deep_field($field) );
     is( exception { $obj->$op( $field, defined($value) ? $value : () ) },
         undef, "$op on $type field succeeds" );
+}
+
+sub DEMOLISH {
+    my ($self) = @_;
+    $self->meerkat->_mongo_database->drop;
 }
 
 1;
