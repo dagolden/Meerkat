@@ -4,7 +4,7 @@ use Test::Roo;
 use Test::Deep '!blessed';
 use Test::FailWarnings;
 use Test::Fatal;
-use Test::Requires qw/MongoDB::MongoClient/;
+use Test::Requires qw/MongoDB/;
 
 my $conn = eval { MongoDB::MongoClient->new; };
 plan skip_all => "No MongoDB on localhost" unless $conn;

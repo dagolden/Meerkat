@@ -4,7 +4,7 @@ use Test::Roo;
 use Test::Deep '!blessed';
 use Test::FailWarnings;
 use Test::Fatal;
-use Test::Requires qw/MongoDB::MongoClient/;
+use Test::Requires qw/MongoDB/;
 
 use Time::HiRes;
 use DateTime;
