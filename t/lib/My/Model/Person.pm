@@ -42,7 +42,11 @@ has parents => (
 has payload => ( is => 'ro' ); # no type constaint so we can experiment
 
 sub _indexes {
-    return ( [ { unique => 1 }, name => 1 ], [ tags => 1, likes => 1 ], );
+    return (
+        [ { unique => 1 }, name => 1 ],
+        [ tags => 1, likes => 1 ],
+        [ { name => 'text_index' }, '$**' => 'text' ],
+    );
 }
 
 1;

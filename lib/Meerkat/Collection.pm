@@ -12,6 +12,7 @@ use MooseX::AttributeShortcuts;
 use Carp qw/croak/;
 use Meerkat::Cursor;
 use Module::Runtime qw/require_module/;
+use Tie::IxHash;
 use Try::Tiny::Retry 0.002 qw/:all/;
 use Type::Params qw/compile/;
 use Types::Standard qw/slurpy :types/;
@@ -218,8 +219,9 @@ sub ensure_indexes {
                 "_indexes must provide a list of key/value pairs, with an optional leading hashref"
             );
         }
+        my $spec = Tie::IxHash->new(@copy);
         $self->_try_mongo_op(
-            ensure_indexes => sub { $self->_mongo_collection->ensure_index( \@copy, $options ) }
+            ensure_indexes => sub { $self->_mongo_collection->ensure_index( $spec, $options ) }
         );
     }
     return 1;
