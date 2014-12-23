@@ -52,6 +52,35 @@ back to C<Meerkat::Collection>:
     my $person = $meerkat->collection( "Person" ); # MyCollection::Person
     my $other  = $meerkat->collection( "Other" );  # Meerkat::Collection
 
+=head2 Default collection class
+
+You may want to set a default collection class for all your models without
+without defining a collection class for each model.
+
+For example one may want to change how C<Meerkat> determines collection names:
+
+   package My::Meerkat::Collection
+    
+   use Moose;
+   extends 'Meerkat::Collection';
+    
+   # lower case with no namespace
+   sub _build_collection_name {
+       my $self = shift;
+       ( my $name = lc($self->class) ) =~ s/.*?([^:]+)$/$1/;
+       return $name;
+   }
+    
+   package main;
+   use Meerkat;
+
+   my $meerkat = Meerkat->new(
+       model_namespace => "My::Model",
+       default_collection_class => 'My::Meerkat::Collection'
+   );
+   
+   $meerkat->collection('Person'); # My::Meerkat::Collection
+
 =head2 Date objects
 
 Do you really need them in your model?  MongoDB does have support for inflating
