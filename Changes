@@ -2,6 +2,11 @@ Revision history for Meerkat
 
 {{$NEXT}}
 
+    [PREREQS]
+
+    - Bumped MooseX::Role::MongoDB prerequisite to 0.009 for
+      MongoDB driver v1.0.0 support
+
 0.010     2014-05-30 16:54:28-04:00 America/New_York
 
     [FIXED]

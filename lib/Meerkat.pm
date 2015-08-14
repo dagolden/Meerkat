@@ -19,7 +19,7 @@ use Types::Standard qw/:types/;
 
 use namespace::autoclean;
 
-with 'MooseX::Role::Logger', 'MooseX::Role::MongoDB' => { -version => 0.006 };
+with 'MooseX::Role::Logger', 'MooseX::Role::MongoDB' => { -version => 0.009 };
 
 =attr model_namespace (required)
 
