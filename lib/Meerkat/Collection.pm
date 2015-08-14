@@ -5,7 +5,7 @@ use warnings;
 package Meerkat::Collection;
 # ABSTRACT: Associate a class, database and MongoDB collection
 
-our $VERSION = "0.011";
+our $VERSION = '0.012';
 
 use Moose 2;
 use MooseX::AttributeShortcuts;
