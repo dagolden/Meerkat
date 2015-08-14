@@ -4,7 +4,8 @@ use warnings;
 
 package Meerkat::Role::Document;
 # ABSTRACT: Enhances a Moose object with Meerkat methods and metadata
-# VERSION
+
+our $VERSION = "0.011";
 
 use Moose::Role 2;
 use MooseX::AttributeShortcuts;
