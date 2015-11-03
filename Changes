@@ -2,6 +2,10 @@ Revision history for Meerkat
 
 {{$NEXT}}
 
+    [FIXED]
+
+    - Tests skip properly with MongoDB v1.x and no mongod running
+
 0.011     2015-08-14 13:16:59-04:00 America/New_York
 
     [PREREQS]

@@ -12,7 +12,8 @@ use DateTime::Tiny;
 use Meerkat::DateTime;
 
 my $conn = eval { MongoDB::MongoClient->new; };
-plan skip_all => "No MongoDB on localhost" unless $conn;
+plan skip_all => "No MongoDB on localhost"
+  unless eval { $conn->get_database("admin")->run_command( [ ismaster => 1 ] ) };
 
 use lib 't/lib';
 
