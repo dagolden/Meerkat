@@ -23,7 +23,7 @@ has cursor => (
     required => 1,
     handles  => [
         qw( fields sort limit tailable skip snapshot hint ),
-        qw( explain count reset has_next next info all ),
+        qw( explain count reset has_next next info all immortal),
     ],
 );
 
