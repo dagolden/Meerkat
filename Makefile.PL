@@ -43,7 +43,6 @@ my %WriteMakefileArgs = (
   },
   "TEST_REQUIRES" => {
     "Data::Faker" => 0,
-    "DateTime::Tiny" => 0,
     "ExtUtils::MakeMaker" => 0,
     "File::Spec" => 0,
     "MooX::Types::MooseLike::Base" => 0,
@@ -68,7 +67,6 @@ my %FallbackPrereqs = (
   "Carp" => 0,
   "Data::Faker" => 0,
   "DateTime" => 0,
-  "DateTime::Tiny" => 0,
   "ExtUtils::MakeMaker" => 0,
   "File::Spec" => 0,
   "Module::Runtime" => 0,

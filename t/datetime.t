@@ -8,7 +8,6 @@ use Test::Requires qw/MongoDB/;
 
 use Time::HiRes;
 use DateTime;
-use DateTime::Tiny;
 use Meerkat::DateTime;
 
 my $conn = eval { MongoDB::MongoClient->new; };
@@ -38,6 +37,8 @@ test 'set DateTime' => sub {
 };
 
 test 'set DateTime::Tiny' => sub {
+    plan skip_all => 'requires DateTime::Tiny'
+      unless eval { require DateTime::Tiny; 1 };
     my $self = shift;
     my $obj  = $self->create_person;
     my $birthday =
