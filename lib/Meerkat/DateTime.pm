@@ -5,7 +5,7 @@ use warnings;
 package Meerkat::DateTime;
 # ABSTRACT: DateTime proxy for lazy inflation from an epoch value
 
-our $VERSION = '0.013';
+our $VERSION = '0.015';
 
 use Moose 2;
 use MooseX::AttributeShortcuts;
