@@ -13,14 +13,14 @@ use MooseX::AttributeShortcuts;
 
 use Meerkat::Collection;
 use Module::Runtime qw/require_module compose_module_name/;
-use MongoDB;
+use MongoDB 1;
 use Try::Tiny;
 use Type::Params qw/compile/;
 use Types::Standard qw/:types/;
 
 use namespace::autoclean;
 
-with 'MooseX::Role::Logger', 'MooseX::Role::MongoDB' => { -version => 0.009 };
+with 'MooseX::Role::Logger', 'MooseX::Role::MongoDB' => { -version => 0.010 };
 
 =attr model_namespace (required)
 

@@ -2,6 +2,15 @@ Revision history for Meerkat
 
 {{$NEXT}}
 
+    [FIXED]
+
+    - No longer issues deprecation warnings (or fails tests) with
+      MongoDB v1.6.0, which warns when using deprecated legacy methods.
+
+    [PREREQS]
+
+    - Requires MongoDB Perl Driver v1.0.0 or later
+
 0.014     2016-02-27 08:20:44-05:00 America/New_York
 
     [ADDED]

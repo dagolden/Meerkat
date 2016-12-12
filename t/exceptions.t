@@ -20,7 +20,8 @@ test 'bad sync' => sub {
     my $copy = $self->person->find_id( $obj->_id );
 
     # intentionally create a bad document
-    $self->person->_mongo_collection->update( { _id => $obj->_id }, { name => [] } );
+    $self->person->_mongo_collection->replace_one( { _id => $obj->_id },
+        { name => [] } );
 
     like(
         exception { $obj->sync },

@@ -200,10 +200,9 @@ sub find {
 
     $person->ensure_indexes;
 
-Executes MongoDB's L<ensure_index|MongoDB::Collection/ensure_index> for every
-index returned by the C<_index> method of the associated class.  Returns true
-on success or throws an error if one occurs. See L<Meerkat::Role::Document> for
-more.
+Ensures an index is constructed for index returned by the C<_index> method
+of the associated class.  Returns true on success or throws an error if one
+occurs. See L<Meerkat::Role::Document> for more.
 
 =cut
 
@@ -212,19 +211,20 @@ sub ensure_indexes {
     my ($self) = $check->(@_);
     state $aoa_check = compile( slurpy ArrayRef [ArrayRef] );
     my ($aoa) = $aoa_check->( $self->class->_indexes );
+    my $index_view = $self->_mongo_collection->indexes;
+    my @indexes;
     for my $index (@$aoa) {
         my @copy = @$index;
-        my $options = ref $copy[0] eq 'HASH' ? shift @copy : {};
+        my $options = ref $copy[0] eq 'HASH' ? shift @copy : undef;
         if ( @copy % 2 != 0 ) {
             $self->_croak(
                 "_indexes must provide a list of key/value pairs, with an optional leading hashref"
             );
         }
         my $spec = Tie::IxHash->new(@copy);
-        $self->_try_mongo_op(
-            ensure_indexes => sub { $self->_mongo_collection->ensure_index( $spec, $options ) }
-        );
+        push @indexes, { keys => $spec, ( $options ? ( options => $options ) : () ) };
     }
+    $self->_try_mongo_op( ensure_indexes => sub { $index_view->create_many(@indexes) } );
     return 1;
 }
 
@@ -237,7 +237,7 @@ sub remove {
     state $check = compile( Object, Object );
     my ( $self, $obj ) = $check->(@_);
     $self->_try_mongo_op(
-        remove => sub { $self->_mongo_collection->remove( { _id => $obj->_id } ) } );
+        remove => sub { $self->_mongo_collection->delete_one( { _id => $obj->_id } ) } );
     $obj->_set_removed(1);
     return 1;
 }
@@ -271,13 +271,8 @@ sub update {
     my ( $self, $obj, $update ) = $check->(@_);
     my $data = $self->_try_mongo_op(
         update => sub {
-            $self->_mongo_collection->find_and_modify(
-                {
-                    query  => { _id => $obj->_id },
-                    update => $update,
-                    new    => 1,
-                }
-            );
+            $self->_mongo_collection->find_one_and_update( { _id => $obj->_id },
+                $update, { returnDocument => "after" } );
         },
     );
 
@@ -327,7 +322,11 @@ sub _save {
     my ( $self, $obj ) = $check->(@_);
     my $pack = $obj->pack;
     delete $pack->{$_} for qw/__CLASS__ _collection _removed/;
-    return $self->_try_mongo_op( sync => sub { !!$self->_mongo_collection->save($pack) }
+    return $self->_try_mongo_op(
+        sync => sub {
+            !!$self->_mongo_collection->replace_one( { _id => $pack->{_id} },
+                $pack, { upsert => 1 } );
+        }
     );
 }
 

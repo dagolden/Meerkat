@@ -138,7 +138,7 @@ test 'create indexes' => sub {
     my $self = shift;
     $self->create_person;
     ok( $self->person->ensure_indexes, "created indexes" );
-    my @got      = $self->person->_mongo_collection->get_indexes;
+    my @got      = $self->person->_mongo_collection->indexes->list->all;
     my @expected = $self->person->class->_indexes;
     is( scalar @got, 1 + @expected, "correct number of indexes" )
       or diag explain \@expected;
