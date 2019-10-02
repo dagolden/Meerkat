@@ -183,16 +183,17 @@ sub find_one {
 Executes a query against C<collection_name>.  It returns a L<Meerkat::Cursor>
 or throws an error on failure.  If a hash reference is provided, it is passed
 as a query parameter to the MongoDB L<find|MongoDB::Collection/find> method,
-otherwise all documents are returned.  Iterating the cursor will return
+otherwise all documents are returned.  You may include and optional options
+hash reference after the query hash reference.  Iterating the cursor will return
 objects of the associated class.
 
 =cut
 
 sub find {
-    state $check = compile( Object, Optional [HashRef] );
-    my ( $self, $query ) = $check->(@_);
+    state $check = compile( Object, Optional [HashRef], Optional [HashRef] );
+    my ( $self, $query, $options ) = $check->(@_);
     my $cursor =
-      $self->_try_mongo_op( find => sub { $self->_mongo_collection->find($query) } );
+      $self->_try_mongo_op( find => sub { $self->_mongo_collection->find($query, $options) } );
     return Meerkat::Cursor->new( cursor => $cursor, collection => $self );
 }
 
