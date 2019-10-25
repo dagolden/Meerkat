@@ -2,6 +2,10 @@ Revision history for Meerkat
 
 {{$NEXT}}
 
+    [ADDED]
+
+    - Added ability to specify options to find.
+
 0.015     2016-12-12 12:36:52-05:00 America/New_York
 
     [FIXED]
