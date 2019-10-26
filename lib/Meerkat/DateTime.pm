@@ -62,7 +62,7 @@ __PACKAGE__->meta->make_immutable;
 =head1 DESCRIPTION
 
 This module provides a way to lazily inflate floating point epoch seconds into
-a L<DateTime object>.  It's conceptually similar to L<DateTime::Tiny>, but
+a L<DateTime> object.  It's conceptually similar to L<DateTime::Tiny>, but
 without all the year, month, day, etc. fields.
 
 The L<Meerkat::Types> module provides Moose type support and coercions and
