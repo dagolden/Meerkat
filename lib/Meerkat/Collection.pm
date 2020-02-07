@@ -343,7 +343,8 @@ sub _sync {
     };
     for my $tgt_attr ( $tgt->meta->get_all_attributes ) {
         my $src_attr = $src->meta->find_attribute_by_name( $tgt_attr->name );
-        $tgt_attr->set_value( $tgt, $src_attr->get_value($src) );
+        $tgt_attr->set_value( $tgt, $src_attr->get_value($src) )
+            if $src_attr->has_value($src);
     }
     return 1;
 }
