@@ -137,7 +137,11 @@ sub collection {
     my $class;
     if ( my $prefix = $self->collection_namespace ) {
         $class = compose_module_name( $prefix, $suffix );
-        try { require_module($class) } catch { $class = "Meerkat::Collection" };
+        try { require_module($class) }
+        catch {
+            die $_ unless m/Can't locate/;
+            $class = "Meerkat::Collection"
+        };
     }
     else {
         $class = "Meerkat::Collection";
