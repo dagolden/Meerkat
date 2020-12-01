@@ -148,7 +148,6 @@ as an argument.
 sub find_id {
     state $check = compile( Object, Defined );
     my ( $self, $id ) = $check->(@_);
-    # $id = ref($id) eq 'BSON::OID' ? $id : BSON::OID->new(oid => $id);
     my $data =
       $self->_try_mongo_op(
         find_id => sub { $self->_mongo_collection->find_one( { _id => $id } ) } );

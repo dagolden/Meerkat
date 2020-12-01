@@ -12,7 +12,6 @@ use MooseX::Storage::Engine;
 
 use aliased 'Meerkat::DateTime' => 'MDT';
 use DateTime;
-use Data::Dumper;
 use Types::Standard qw/:types/;
 
 subtype MeerkatDateTime, as MDT;

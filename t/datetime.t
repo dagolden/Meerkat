@@ -6,7 +6,6 @@ use Test::FailWarnings;
 use Test::Fatal;
 use Test::Requires qw/MongoDB/;
 
-use Data::Dumper;
 use Time::HiRes;
 use DateTime;
 use Meerkat::DateTime;
