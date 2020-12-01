@@ -87,6 +87,19 @@ has collection_namespace => (
     isa => 'Str',
 );
 
+=attr default_collection_class
+
+Defaults to L<Meerkat::Collection>. Set this to a class name that extends
+L<Meercat::Collection> to set a default collection class.
+
+=cut
+
+has default_collection_class => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => 'Meerkat::Collection'
+);
+
 sub BUILD {
     my ($self) = @_;
 
@@ -130,6 +143,18 @@ Meerkat::Collection C<class> attribute.
 
 =cut
 
+sub _load_default_collection_class {
+    my $self = shift;
+    
+    my $class = $self->default_collection_class;
+    
+    return $class if $class eq 'Meerkat::Collection';
+    
+    require_module($class);
+    
+    return $class;
+}
+
 sub collection {
     state $check = compile( Object, Str );
     my ( $self, $suffix ) = $check->(@_);
@@ -137,11 +162,12 @@ sub collection {
     my $class;
     if ( my $prefix = $self->collection_namespace ) {
         $class = compose_module_name( $prefix, $suffix );
-        try { require_module($class) } catch { $class = "Meerkat::Collection" };
+        try { require_module($class) } catch { $class = $self->_load_default_collection_class };
     }
     else {
-        $class = "Meerkat::Collection";
+        $class = $self->_load_default_collection_class;
     }
+    $DB::single=1;
     return $class->new( class => $model, meerkat => $self );
 }
 
