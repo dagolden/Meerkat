@@ -1,4 +1,4 @@
-# COPYRIGHTuse strict;
+use strict;
 use warnings;
 use Test::Roo;
 use Test::Deep '!blessed';
@@ -6,6 +6,7 @@ use Test::FailWarnings;
 use Test::Fatal;
 use Test::Requires qw/MongoDB/;
 
+use Data::Dumper;
 use Time::HiRes;
 use DateTime;
 use Meerkat::DateTime;

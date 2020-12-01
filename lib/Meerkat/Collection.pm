@@ -125,7 +125,8 @@ the MongoDB L<count|MongoDB::Collection/count> method.
 sub count {
     state $check = compile( Object, Optional [HashRef] );
     my ( $self, $query ) = $check->(@_);
-    return $self->_try_mongo_op( count => sub { $self->_mongo_collection->count($query) }
+    $query = {} unless $query;
+    return $self->_try_mongo_op( count => sub { $self->_mongo_collection->count_documents($query) }
     );
 }
 
@@ -139,7 +140,7 @@ if one occurs.  This is a shorthand for the same query via C<find_one>:
 
     $person->find_one( { _id => $id } );
 
-However, C<find_id> can take either a scalar C<_id> or a L<MongoDB::OID> object
+However, C<find_id> can take either a scalar C<_id> or a L<BSON::OID> object
 as an argument.
 
 =cut
@@ -147,7 +148,7 @@ as an argument.
 sub find_id {
     state $check = compile( Object, Defined );
     my ( $self, $id ) = $check->(@_);
-    $id = ref($id) eq 'MongoDB::OID' ? $id : MongoDB::OID->new($id);
+    # $id = ref($id) eq 'BSON::OID' ? $id : BSON::OID->new(oid => $id);
     my $data =
       $self->_try_mongo_op(
         find_id => sub { $self->_mongo_collection->find_one( { _id => $id } ) } );
