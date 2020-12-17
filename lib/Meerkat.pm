@@ -13,7 +13,7 @@ use MooseX::AttributeShortcuts;
 
 use Meerkat::Collection;
 use Module::Runtime qw/require_module compose_module_name/;
-use MongoDB 1;
+use MongoDB 2;
 use Try::Tiny;
 use Type::Params qw/compile/;
 use Types::Standard qw/:types/;

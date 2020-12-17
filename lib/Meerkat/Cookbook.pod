@@ -1,5 +1,5 @@
 # PODNAME: Meerkat::Cookbook
-# ABSTRACT: Meerkat recipes with dos and don'ts
+# ABSTRACT: Meerkat recipes with do's and don'ts
 
 =head1 COOKBOOK
 

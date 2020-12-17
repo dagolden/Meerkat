@@ -118,15 +118,22 @@ sub create {
 
 Returns the number of documents in the associated collection or throws an error on
 failure.  If a hash reference is provided, it is passed as a query parameter to
-the MongoDB L<count|MongoDB::Collection/count> method.
+the MongoDB L<count_documents|MongoDB::Collection/count_documents> method.
+Otherwise, the MongoDB
+L<estimated_document_count|MongoDB::Collection/estimated_document_count> method
+is used instead.
 
 =cut
 
 sub count {
     state $check = compile( Object, Optional [HashRef] );
     my ( $self, $query ) = $check->(@_);
-    return $self->_try_mongo_op( count => sub { $self->_mongo_collection->count($query) }
-    );
+    if ( defined $query ) {
+        return $self->_try_mongo_op(
+            count => sub { $self->_mongo_collection->count_documents($query) } );
+    }
+    return $self->_try_mongo_op(
+        count => sub { $self->_mongo_collection->estimated_document_count() } );
 }
 
 =method find_id
@@ -139,7 +146,7 @@ if one occurs.  This is a shorthand for the same query via C<find_one>:
 
     $person->find_one( { _id => $id } );
 
-However, C<find_id> can take either a scalar C<_id> or a L<MongoDB::OID> object
+However, C<find_id> can take either a scalar C<_id> or a L<BSON::OID> object
 as an argument.
 
 =cut
@@ -147,7 +154,6 @@ as an argument.
 sub find_id {
     state $check = compile( Object, Defined );
     my ( $self, $id ) = $check->(@_);
-    $id = ref($id) eq 'MongoDB::OID' ? $id : MongoDB::OID->new($id);
     my $data =
       $self->_try_mongo_op(
         find_id => sub { $self->_mongo_collection->find_one( { _id => $id } ) } );
@@ -193,7 +199,8 @@ sub find {
     state $check = compile( Object, Optional [HashRef], Optional [HashRef] );
     my ( $self, $query, $options ) = $check->(@_);
     my $cursor =
-      $self->_try_mongo_op( find => sub { $self->_mongo_collection->find($query, $options) } );
+      $self->_try_mongo_op(
+        find => sub { $self->_mongo_collection->find( $query, $options ) } );
     return Meerkat::Cursor->new( cursor => $cursor, collection => $self );
 }
 
@@ -219,8 +226,7 @@ sub ensure_indexes {
         my $options = ref $copy[0] eq 'HASH' ? shift @copy : undef;
         if ( @copy % 2 != 0 ) {
             $self->_croak(
-                "_indexes must provide a list of key/value pairs, with an optional leading hashref"
-            );
+                "_indexes must provide a list of key/value pairs, with an optional leading hashref");
         }
         my $spec = Tie::IxHash->new(@copy);
         push @indexes, { keys => $spec, ( $options ? ( options => $options ) : () ) };
