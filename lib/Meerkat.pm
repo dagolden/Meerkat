@@ -5,7 +5,7 @@ use warnings;
 package Meerkat;
 # ABSTRACT: Manage MongoDB documents as Moose objects
 
-our $VERSION = '0.016';
+our $VERSION = '0.017';
 
 # Dependencies
 use Moose 2;
